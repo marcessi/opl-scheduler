@@ -5,9 +5,10 @@ services:
     environment:
       POSTGRES_DB: opl_scheduler
       POSTGRES_USER: opl_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: dev_password
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U opl_user -d opl_scheduler"]
       interval: 5s
@@ -16,14 +17,17 @@ services:
 
   backend:
     build:
-      context: ..
+      context: .
       dockerfile: deploy/Dockerfile
     restart: unless-stopped
+    volumes:
+      - ./backend/tests:/app/tests
     environment:
-      DATABASE_URL: postgresql://opl_user:${POSTGRES_PASSWORD}@db:5432/opl_scheduler
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
-      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD}
+      DATABASE_URL: postgresql://opl_user:dev_password@db:5432/opl_scheduler
+      TEST_DATABASE_URL: postgresql://opl_user:dev_password@db:5432/opl_scheduler_test
+      JWT_SECRET_KEY: dev-secret-key
+      CORS_ORIGINS: "*"
+      ADMIN_BOOTSTRAP_PASSWORD: admin
     ports:
       - "8000:8000"
     depends_on:

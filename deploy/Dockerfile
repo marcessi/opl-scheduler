@@ -1,9 +1,5 @@
-# ============================================================
-# OPLscheduler — Imagen de producción
 # Build context: raíz del proyecto
 # Build: docker build -f deploy/Dockerfile -t oplscheduler .
-# Run:   docker compose -f deploy/docker-compose.yml up
-# ============================================================
 
 # ── Stage 1: compilar el frontend ────────────────────────────
 FROM node:22-alpine AS frontend-builder
@@ -59,10 +55,7 @@ USER app
 
 EXPOSE 8000
 
-# Healthcheck para orquestadores (App Service usa su propio probe)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8000/health || exit 1
 
-# Migraciones de BD antes de arrancar la API. --proxy-headers necesario tras
-# load balancer de Azure App Service.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=*"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn src.api.app:app --host 0.0.0.0 --port 8000"]
