@@ -1,0 +1,27 @@
+# Configuración de desarrollo local
+# Usar: docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.override.yml up
+# NO usar en producción. En producción: docker compose -f deploy/docker-compose.yml up
+
+services:
+  db:
+    environment:
+      POSTGRES_DB: opl_scheduler
+      POSTGRES_USER: opl_user
+      POSTGRES_PASSWORD: dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+
+  backend:
+    volumes:
+      - ../backend:/app
+      - /app/.venv  # El .venv del container no se sobreescribe con el del host
+    environment:
+      DATABASE_URL: postgresql://opl_user:dev_password@db:5432/opl_scheduler
+      TEST_DATABASE_URL: postgresql://opl_user:dev_password@db:5432/opl_scheduler_test
+      JWT_SECRET_KEY: dev-jwt-secret-only-for-local-not-production
+      CORS_ORIGINS: "*"
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload"

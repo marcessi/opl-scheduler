@@ -1,0 +1,86 @@
+# ============================================================
+# Docker build context exclusions
+# Reduce el tamaño del contexto y previene secretos en imagen.
+# ============================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Secrets
+.env
+**/.env
+.env.*
+!.env.example
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+**/.venv
+**/venv
+**/.pytest_cache
+**/.mypy_cache
+**/.coverage
+**/htmlcov
+**/.tox
+**/*.egg-info
+**/.eggs
+
+# Node
+**/node_modules
+**/npm-debug.log*
+**/yarn-error.log
+**/.yarn
+frontend/dist
+frontend/dist-ssr
+
+# Datos locales — la app procesa Excel en memoria, no necesita persistencia
+data/
+backend/data/
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# Tests (no necesarios en imagen prod)
+backend/tests/
+backend/pytest.ini
+backend/scripts/
+
+# Docs
+docs/
+*.md
+!frontend/README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github
+
+# Docker
+deploy/docker-compose*.yml
+deploy/azure/
+deploy/db-init/
+deploy/.env
+
+# Logs
+**/*.log
+
+# Build artifacts
+build/
+dist/
+
+# Misc
+*.bak
+tmp*
+ngrok*
+skills-lock.json
