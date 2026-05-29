@@ -171,9 +171,9 @@ El backend está organizado por capas con responsabilidades claras:
 
 Cada asignación tiene un **tipo**:
 
-- 🟢 `NORMAL` — el solver decide libremente.
+- 🔵 `NORMAL` — el solver decide libremente.
 - 🔴 `OBLIGATORIA` — debe asignarse sí o sí (si no es posible, el problema es infactible).
-- 🔵 `ARRASTRE` — trabajo trasladado de una semana previa; siempre fijo e inmutable.
+- 🟣 `ARRASTRE` — trabajo trasladado de una semana previa; siempre fijo e inmutable.
 
 ---
 
