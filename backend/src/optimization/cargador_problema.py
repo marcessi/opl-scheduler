@@ -90,11 +90,10 @@ def cargar_datos_problema(
     Args:
         session:            Sesión de SQLAlchemy.
         ids_opls_normales:  IDs de OPL normales a optimizar esta semana.
-        semana:             Si se provee, carga también las filas fijas de esa semana:
-                            - fija_con_operario → deduce su tiempo_planificado de la
-                              capacidad del operario correspondiente.
-                            - obligatorias (fija=True, dni=None) → se añaden al
-                              problema como OPLs que deben asignarse completas.
+        semana: Si se provee, carga también las filas fijas de esa semana
+            (``fija_con_operario`` deduce su ``tiempo_planificado`` de la capacidad
+            del operario; las obligatorias con ``fija=True`` y ``dni=None`` se añaden
+            al problema como OPLs que deben asignarse completas).
 
     Returns:
         ProblemaAsignacion con todos los datos en estructuras Python puras.

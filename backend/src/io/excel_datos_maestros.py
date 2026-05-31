@@ -1,18 +1,16 @@
 """
 IO universal: mismo formato Excel para exportar e importar cualquier entidad.
 
-Estructura de hojas:
-    - Formato plano (fila 1 cabeceras, fila 2+ datos):
-        familias, articulos, operarios, operario_familia, operario_articulo, opls
+Formato plano por hoja (fila 1 cabeceras, fila 2+ datos), una hoja por entidad:
+``familias``, ``articulos``, ``operarios``, ``operario_familia``,
+``operario_articulo`` y ``opls``.
 
-Nombres de hoja: familias | articulos | operarios |
-                 operario_familia | operario_articulo | opls
+Uso::
 
-Uso:
-  exportar_entidades(session, buffer_o_path, entidades=None)
+    exportar_entidades(session, buffer_o_path, entidades=None)
     cargar_entidades(session, path, modo, entidades=None)
-        modo: "reemplazar" | "actualizar"
-    → dict { entidad: {"importados": n, "omitidos": m, "razones": {...}} }
+        # modo: "reemplazar" | "actualizar"
+        # devuelve: { entidad: {"importados": n, "omitidos": m, "razones": {...}} }
 """
 
 from collections import Counter

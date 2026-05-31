@@ -1,0 +1,4 @@
+# Dependencias para construir la documentación con Sphinx.
+# Instrucciones de uso en el README, sección «Documentación del código».
+sphinx>=7.0
+furo>=2024.1
