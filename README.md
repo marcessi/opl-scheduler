@@ -221,37 +221,22 @@ docker compose exec backend python -m pytest -k "nombre_del_test" -q
 
 ## 📚 Documentación del código
 
-El backend está documentado con **docstrings estilo Google** en todas las funciones y clases públicas. A partir de ellos se genera un **sitio HTML navegable** con [Sphinx](https://www.sphinx-doc.org/) (extensión `autodoc` + `napoleon`).
-
-> La configuración vive en `backend/docs/` (`conf.py`, `index.rst`). El sitio generado (`_build/`) y los `.rst` autogenerados (`api/`) están en `.gitignore`: son artefactos, se regeneran cuando hagan falta.
-
-### Generar el sitio
+El backend está documentado con **docstrings estilo Google** en todas las funciones y clases públicas. A partir de ellos se genera un **sitio HTML navegable** con [Sphinx](https://www.sphinx-doc.org/) (extensiones `autodoc` + `napoleon`). La configuración vive en `backend/docs/`.
 
 Con el [entorno del backend](#-desarrollo) activado (un venv con `requirements.txt` instalado, que aporta las dependencias que `autodoc` necesita importar):
 
 ```bash
 cd backend
-pip install -r docs/requirements-docs.txt          # Sphinx + tema furo
-
-python -m sphinx.ext.apidoc --force --separate -o docs/api src   # genera .rst por módulo
-python -m sphinx -b html docs docs/_build/html                   # construye el sitio
+pip install -r docs/requirements-docs.txt                        # Sphinx + tema furo
+python -m sphinx.ext.apidoc --force --separate -o docs/api src    # genera .rst por módulo
+python -m sphinx -b html docs docs/_build/html                    # construye el sitio
 ```
 
-El resultado queda en `backend/docs/_build/html/index.html` (ábrelo en el navegador).
+El resultado queda en `backend/docs/_build/html/index.html`. No hace falta una base de datos: `conf.py` define variables de entorno de relleno para que los módulos se importen sin conectar.
 
-> No hace falta una base de datos: `conf.py` define variables de entorno de relleno para que los módulos se importen sin conectar.
-
-### Atajos con `make`
-
-Desde `backend/docs/` (requiere `make`):
-
-| Comando | Acción |
-|---------|--------|
-| `make html` | Genera `.rst` por módulo y construye el sitio HTML |
-| `make latexpdf` | Genera un PDF (requiere una distribución LaTeX instalada) |
-| `make clean` | Borra `_build/` y los `.rst` autogenerados |
-
-> El **frontend** está documentado con **JSDoc**, que da autocompletado e información directamente en el editor (VS Code, etc.); no genera un sitio aparte.
+> El sitio generado (`_build/`) y los `.rst` autogenerados (`api/`) están en `.gitignore`: son artefactos.
+>
+> El **frontend** está documentado con **JSDoc**, que da autocompletado e información en el editor; no genera un sitio aparte.
 
 ---
 
