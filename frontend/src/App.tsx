@@ -9,6 +9,12 @@ import DatosMaestros from './pages/DatosMaestros'
 import Repartos from './pages/Repartos'
 import RepartoDetalle from './pages/RepartoDetalle'
 
+/**
+ * Raíz de la aplicación: monta los providers (auth, solver), el router y las rutas.
+ *
+ * Todas las rutas salvo `/login` van protegidas por {@link RutaProtegida} y
+ * envueltas en {@link Layout}.
+ */
 export default function App() {
   return (
     <AuthProvider>

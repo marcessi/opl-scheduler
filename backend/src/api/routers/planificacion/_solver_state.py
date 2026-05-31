@@ -32,6 +32,11 @@ class _SolverState:
         self.ejecutando: bool = False
 
     def is_running(self) -> bool:
+        """Indica si hay una optimización en curso.
+
+        Returns:
+            ``True`` si el solver está ejecutándose, ``False`` en caso contrario.
+        """
         with self._lock:
             return self.ejecutando
 
@@ -42,6 +47,15 @@ class _SolverState:
         config: dict[str, Any],
         fases_activas: dict[str, bool],
     ) -> None:
+        """Registra el arranque de una optimización y reinicia el estado de fases.
+
+        Args:
+            semana: Semana que se está optimizando.
+            proceso: Subproceso (``multiprocessing.Process``) que ejecuta el solver.
+            config: Configuración del solver, expuesta luego en el progreso.
+            fases_activas: Qué fases están activas; las inactivas se marcan
+                directamente como ``NO_EJECUTADA``.
+        """
         with self._lock:
             self.semana = semana
             self.proceso = proceso
@@ -61,6 +75,12 @@ class _SolverState:
             self.ejecutando = True
 
     def actualizar_fase(self, fase: str, estado: str) -> None:
+        """Actualiza el estado de una fase concreta y el estado global actual.
+
+        Args:
+            fase: Nombre de la fase (BASE, EFICIENCIA, EQUIDAD_PESO, ...).
+            estado: Nuevo estado de la fase (EJECUTANDO, OPTIMA, ...).
+        """
         with self._lock:
             fase_l = fase.lower()
             if fase_l in self.fases:
@@ -69,12 +89,22 @@ class _SolverState:
             self.estado = estado
 
     def finalizar_exito(self, resultado_dict: dict[str, Any]) -> None:
+        """Marca la optimización como terminada con éxito y cachea su resultado.
+
+        Args:
+            resultado_dict: Resultado serializado del solver para esta semana.
+        """
         with self._lock:
             self.resultado = resultado_dict
             self.ejecutando = False
             self.terminado = True
 
     def finalizar_error(self, mensaje: str) -> None:
+        """Marca la optimización como terminada con error.
+
+        Args:
+            mensaje: Descripción del error producido.
+        """
         with self._lock:
             self.error = mensaje
             self.ejecutando = False
@@ -87,6 +117,12 @@ class _SolverState:
                 self.resultado = None
 
     def snapshot_progreso(self) -> dict[str, Any]:
+        """Captura el progreso detallado de la optimización actual.
+
+        Returns:
+            Diccionario con fase y estado actuales, banderas de ejecución/fin,
+            timestamp de inicio, posible error, configuración y estado por fase.
+        """
         with self._lock:
             return {
                 "fase": self.fase,
@@ -100,6 +136,12 @@ class _SolverState:
             }
 
     def snapshot_estado_global(self) -> dict[str, Any]:
+        """Captura un resumen del solver para el estado global de la app.
+
+        Returns:
+            Diccionario con la semana en curso y su progreso, o campos a ``None``
+            si no hay ninguna optimización ejecutándose.
+        """
         with self._lock:
             return {
                 "semana_en_curso": self.semana if self.ejecutando else None,
@@ -110,6 +152,15 @@ class _SolverState:
             }
 
     def get_resultado(self, semana: date) -> Optional[dict[str, Any]]:
+        """Devuelve el resultado cacheado de una semana, si corresponde.
+
+        Args:
+            semana: Semana cuyo resultado se solicita.
+
+        Returns:
+            El resultado serializado si coincide con la última semana optimizada,
+            o ``None`` en caso contrario.
+        """
         with self._lock:
             if self.semana == semana:
                 return self.resultado

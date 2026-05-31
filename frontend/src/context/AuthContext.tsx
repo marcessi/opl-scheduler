@@ -3,6 +3,12 @@ import { apiFetch } from '../api/client'
 import type { User, LoginResponse } from '../api/types'
 import { AuthContext } from './auth-context'
 
+/**
+ * Provider de autenticación.
+ *
+ * Al montar, intenta restaurar la sesión desde el JWT guardado en `localStorage`
+ * y expone `login`/`logout` al árbol de componentes.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)

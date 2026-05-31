@@ -13,11 +13,15 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 class FamiliaOut(BaseModel):
+    """Familia de artículos con su nivel de experiencia requerido."""
+
     descripcion: str
     experiencia_requerida: int
 
 
 class ArticuloOut(BaseModel):
+    """Artículo con su familia, peso unitario y tiempo estándar de fabricación."""
+
     referencia: str
     familia: str
     descripcion: str
@@ -26,24 +30,32 @@ class ArticuloOut(BaseModel):
 
 
 class OperarioOut(BaseModel):
+    """Operario con su capacidad semanal en horas."""
+
     dni: str
     nombre_completo: str
     horas_semanales: float
 
 
 class OperarioFamiliaOut(BaseModel):
+    """Cualificación de un operario en una familia (su experiencia)."""
+
     dni_operario: str
     familia: str
     experiencia: int
 
 
 class OperarioArticuloOut(BaseModel):
+    """Tiempo específico que un operario tarda en un artículo concreto."""
+
     ref_articulo: str
     dni_operario: str
     tiempo_estimado: float
 
 
 class OplOut(BaseModel):
+    """Orden de producción con su tiempo estimado y el operario asignado, si lo hay."""
+
     id: str
     ref_articulo: str
     cantidad: int
@@ -56,12 +68,16 @@ class OplOut(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ImportEntityResult(BaseModel):
+    """Resultado de importar una entidad: importados, omitidos y razones de omisión."""
+
     importados: int
     omitidos: int
     razones: dict[str, int]
 
 
 class CargaOut(BaseModel):
+    """Resumen de la importación masiva, con un resultado por tipo de entidad."""
+
     familias: Optional[ImportEntityResult] = None
     articulos: Optional[ImportEntityResult] = None
     operarios: Optional[ImportEntityResult] = None
@@ -76,6 +92,8 @@ class CargaOut(BaseModel):
 
 
 class AsignacionItemOut(BaseModel):
+    """Una asignación del resultado del solver: OPL → operario, con sus minutos."""
+
     id_opl: str
     nombre_operario: str
     dni_operario: str
@@ -83,6 +101,8 @@ class AsignacionItemOut(BaseModel):
 
 
 class CargaOperarioOut(BaseModel):
+    """Carga resultante de un operario: minutos, capacidad, utilización y aportes."""
+
     nombre: str
     dni: str
     carga_min: int
@@ -93,6 +113,8 @@ class CargaOperarioOut(BaseModel):
 
 
 class MetricasOut(BaseModel):
+    """Métricas globales de calidad y utilización de un reparto optimizado."""
+
     n_opls_totales: int
     n_asignadas: int
     n_optimas: int
@@ -104,6 +126,8 @@ class MetricasOut(BaseModel):
 
 
 class ResultadoOut(BaseModel):
+    """Resultado completo de una optimización: estados, asignaciones, cargas y métricas."""
+
     estado: str
     estado_base: str
     estado_eficiencia: str
@@ -121,6 +145,8 @@ class ResultadoOut(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class AsignacionDetalleOut(BaseModel):
+    """Fila detallada de un reparto: OPL, artículo, operario y si es óptima."""
+
     id_opl: str
     ref_articulo: str
     nombre_articulo: str = ""
@@ -136,6 +162,8 @@ class AsignacionDetalleOut(BaseModel):
 
 
 class RepartoResumenOut(BaseModel):
+    """Resumen de un reparto: totales, estados de las fases y metadatos de aprobación."""
+
     semana: date
     aprobado: bool
     fecha_aprobacion: Optional[datetime] = None
@@ -157,6 +185,8 @@ class RepartoResumenOut(BaseModel):
 
 
 class RepartoDetalleOut(BaseModel):
+    """Detalle completo de un reparto: cabecera de estados y lista de asignaciones."""
+
     semana: date
     aprobado: bool
     fecha_aprobacion: Optional[datetime] = None
@@ -168,6 +198,8 @@ class RepartoDetalleOut(BaseModel):
 
 
 class EstadoOptimizacionOut(BaseModel):
+    """Estado global del solver: semana en curso y progreso, o vacío si está inactivo."""
+
     semana_en_curso: Optional[date] = None
     fase: Optional[str] = None
     estado: Optional[str] = None
@@ -177,6 +209,8 @@ class EstadoOptimizacionOut(BaseModel):
 
 # Modelo estándar de error para respuestas unificadas
 class ErrorOut(BaseModel):
+    """Cuerpo de error uniforme de la API: tipo, detalle y código HTTP."""
+
     error: str
     detail: str
     code: int
@@ -187,27 +221,37 @@ class ErrorOut(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class PerfilDelta(str, Enum):
+    """Perfil de optimización: cuánta calidad se sacrifica a favor de la equidad."""
+
     produccion = "produccion"   # delta_eficiencia=2%, delta_equidad_peso=3%  — SLA, presión de output
     balanceado = "balanceado"   # delta_eficiencia=6%, delta_equidad_peso=5%  — operación estándar
     personas   = "personas"     # delta_eficiencia=10%, delta_equidad_peso=5% — equipos con fatiga/rotación
 
 
 class OptimizarSemanaRequest(BaseModel):
+    """Parámetros de la petición de optimización de una semana."""
+
     ids_opls: Optional[list[str]] = None  # None = todas las normales de la BD
     tiempo_maximo_min: int = Field(default=5, ge=1, le=15)
     perfil: PerfilDelta = PerfilDelta.balanceado
 
 
 class ActualizarAsignacionRequest(BaseModel):
+    """Cambios manuales sobre una asignación: operario y/o flag de fijación."""
+
     dni_operario: Optional[str] = None
     es_fija: Optional[bool] = None
 
 
 class AnadirAsignacionesRequest(BaseModel):
+    """Petición para añadir OPLs al reparto de una semana (lista no vacía)."""
+
     ids_opls: list[str] = Field(min_length=1)
 
 
 class AprobarSemanaRequest(BaseModel):
+    """Parámetros de aprobación de una semana y de la generación de arrastre."""
+
     semana_destino: date
     con_arrastre: bool = True
     incluir_no_asignadas_en_arrastre: bool = True
@@ -215,12 +259,16 @@ class AprobarSemanaRequest(BaseModel):
 
 
 class LimpiarSelectivoRequest(BaseModel):
+    """Operaciones de limpieza selectiva a aplicar sobre el reparto de una semana."""
+
     desfijar: bool = False
     normalizar_obligatorias: bool = False
     eliminar_arrastre: bool = False
 
 
 class LimpiarSelectivoOut(BaseModel):
+    """Recuento de filas afectadas por cada operación de limpieza selectiva."""
+
     semana: date
     desfijadas: int = 0
     normalizadas: int = 0
@@ -228,5 +276,7 @@ class LimpiarSelectivoOut(BaseModel):
 
 
 class OplCrearManualRequest(BaseModel):
+    """Datos para crear una OPL manual: artículo y cantidad (> 0)."""
+
     ref_articulo: str
     cantidad: int = Field(gt=0)

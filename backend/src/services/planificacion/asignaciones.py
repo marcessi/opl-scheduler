@@ -51,44 +51,131 @@ def calcular_aportes(
 # ─── Lecturas (wrappers a crud, conservados por compatibilidad) ─────────────
 
 def leer_aportes_antes_de(session: Session, semana: date) -> dict[str, dict[str, float]]:
+    """Suma los aportes (peso y artículos) por operario en semanas anteriores.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana de referencia (exclusiva).
+
+    Returns:
+        Diccionario ``{dni: {"peso": float, "articulos": float}}`` con lo
+        acumulado en semanas estrictamente anteriores a ``semana``.
+    """
     return asignaciones_crud.sumar_aportes_antes_de(session, semana)
 
 
 def leer_asignaciones_opl(session: Session, id_opl: str) -> List[AsignacionOPL]:
+    """Lista todas las asignaciones de una OPL.
+
+    Args:
+        session: Sesión de base de datos activa.
+        id_opl: Identificador de la OPL.
+
+    Returns:
+        Lista de asignaciones de la OPL, ordenadas por semana.
+    """
     return asignaciones_crud.listar_por_opl(session, id_opl)
 
 
 def leer_asignacion(session: Session, id_opl: str, semana: date) -> Optional[AsignacionOPL]:
+    """Lee una asignación por su clave compuesta (id_opl, semana).
+
+    Args:
+        session: Sesión de base de datos activa.
+        id_opl: Identificador de la OPL.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        La ``AsignacionOPL`` correspondiente, o ``None`` si no existe.
+    """
     return asignaciones_crud.leer(session, id_opl, semana)
 
 
 def leer_asignaciones_semana(session: Session, semana: date) -> List[AsignacionOPL]:
+    """Lista todas las asignaciones de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones de la semana (cualquier tipo y estado).
+    """
     return asignaciones_crud.listar_semana(session, semana)
 
 
 def leer_ids_opls_asignadas_otras_semanas(session: Session, semana: date) -> set[str]:
+    """Obtiene los ids de OPL ya comprometidos en semanas distintas.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana que se planifica.
+
+    Returns:
+        Conjunto de ids de OPL con asignación en cualquier semana ≠ ``semana``.
+    """
     return asignaciones_crud.ids_opls_asignadas_otras_semanas(session, semana)
 
 
 def leer_asignaciones_por_tipo(
     session: Session, semana: date, tipo: TipoAsignacion,
 ) -> List[AsignacionOPL]:
+    """Lista las asignaciones de una semana filtrando por tipo.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+        tipo: Tipo de asignación (NORMAL, OBLIGATORIA o ARRASTRE).
+
+    Returns:
+        Lista de asignaciones de la semana con el tipo indicado.
+    """
     return asignaciones_crud.listar_semana_por_tipo(session, semana, tipo)
 
 
 def leer_asignaciones_fijas_con_operario_semana(
     session: Session, semana: date,
 ) -> List[AsignacionOPL]:
+    """Lista las asignaciones fijas con operario asignado de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones ``es_fija=True`` con ``dni_operario`` no nulo;
+        sus minutos se descuentan de la capacidad sin reoptimizar.
+    """
     return asignaciones_crud.listar_fijas_con_operario_semana(session, semana)
 
 
 def leer_asignaciones_obligatorias_semana(session: Session, semana: date) -> List[AsignacionOPL]:
+    """Lista las asignaciones OBLIGATORIA aún reoptimizables de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones OBLIGATORIA con ``es_fija=False``.
+    """
     return asignaciones_crud.listar_obligatorias_semana(session, semana)
 
 
 # ─── Eliminaciones (wrappers finos sobre crud unificado) ────────────────────
 
 def eliminar_asignaciones_no_fijas_semana(session: Session, semana: date) -> int:
+    """Borra las asignaciones reoptimizables de una semana y hace ``commit``.
+
+    Las filas fijas (incluido ARRASTRE) se conservan intactas.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Número de filas eliminadas.
+    """
     n = asignaciones_crud.eliminar_semana(session, semana, solo_no_fijas=True)
     session.commit()
     return n
@@ -201,7 +288,7 @@ def actualizar_operario_asignacion(
     except IntegrityError as e:
         session.rollback()
         raise ConflictError(
-            f"No se pudo actualizar la asignacion de OPL '{id_opl}': {e.orig}"
+            f"No se pudo actualizar la asignación de OPL '{id_opl}': {e.orig}"
         ) from e
 
 

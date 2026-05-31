@@ -49,6 +49,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
+    """Inicializa la base de datos (crea tablas y usuario admin) al arrancar."""
     init_db()
 
 
@@ -67,6 +68,7 @@ app.include_router(planificacion_router)
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    """Traduce ``HTTPException`` al formato de error JSON uniforme de la API."""
     logger.warning("HTTPException: %s %s", exc.status_code, exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
@@ -76,6 +78,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(AuthenticationError)
 async def authentication_error_handler(request: Request, exc: AuthenticationError):
+    """Convierte ``AuthenticationError`` de dominio en una respuesta 401."""
     logger.info("AuthenticationError: %s", exc.message)
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -86,6 +89,7 @@ async def authentication_error_handler(request: Request, exc: AuthenticationErro
 
 @app.exception_handler(NotFoundError)
 async def not_found_domain_handler(request: Request, exc: NotFoundError):
+    """Convierte ``NotFoundError`` de dominio en una respuesta 404."""
     logger.info("NotFoundError: %s", exc.message)
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -95,6 +99,7 @@ async def not_found_domain_handler(request: Request, exc: NotFoundError):
 
 @app.exception_handler(ConflictError)
 async def conflict_domain_handler(request: Request, exc: ConflictError):
+    """Convierte ``ConflictError`` de dominio en una respuesta 409."""
     logger.info("ConflictError: %s", exc.message)
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
@@ -104,6 +109,7 @@ async def conflict_domain_handler(request: Request, exc: ConflictError):
 
 @app.exception_handler(DomainValidationError)
 async def validation_domain_handler(request: Request, exc: DomainValidationError):
+    """Convierte ``DomainValidationError`` de dominio en una respuesta 422."""
     logger.info("DomainValidationError: %s", exc.message)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -113,6 +119,7 @@ async def validation_domain_handler(request: Request, exc: DomainValidationError
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Da formato uniforme a los errores de validación de la petición (422)."""
     logger.warning("RequestValidationError: %s", exc.errors())
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -127,6 +134,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    """Captura cualquier excepción no controlada y responde con un 500 genérico."""
     logger.exception("Unhandled exception during request")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -146,5 +154,10 @@ if _DIST.exists():
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
+        """Sirve la SPA: devuelve el fichero estático pedido o ``index.html``.
+
+        Catch-all de menor prioridad que las rutas de API; permite el routing del
+        lado cliente devolviendo ``index.html`` cuando la ruta no es un fichero.
+        """
         file = _DIST / full_path
         return FileResponse(file if file.is_file() else _DIST / "index.html")

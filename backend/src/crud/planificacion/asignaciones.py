@@ -23,6 +23,16 @@ from src.database.schema import (
 # ─── Lecturas ───────────────────────────────────────────────────────────────
 
 def leer(session: Session, id_opl: str, semana: date) -> Optional[AsignacionOPL]:
+    """Lee una asignación por su clave primaria compuesta.
+
+    Args:
+        session: Sesión de base de datos activa.
+        id_opl: Identificador de la OPL.
+        semana: Lunes ISO de la semana de la asignación.
+
+    Returns:
+        La ``AsignacionOPL`` correspondiente, o ``None`` si no existe.
+    """
     return session.scalars(
         select(AsignacionOPL).where(
             AsignacionOPL.id_opl == id_opl,
@@ -32,6 +42,15 @@ def leer(session: Session, id_opl: str, semana: date) -> Optional[AsignacionOPL]
 
 
 def listar_por_opl(session: Session, id_opl: str) -> List[AsignacionOPL]:
+    """Lista todas las asignaciones de una OPL ordenadas por semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        id_opl: Identificador de la OPL.
+
+    Returns:
+        Lista de asignaciones (como máximo dos: semana actual y siguiente).
+    """
     stmt = (
         select(AsignacionOPL)
         .where(AsignacionOPL.id_opl == id_opl)
@@ -41,6 +60,15 @@ def listar_por_opl(session: Session, id_opl: str) -> List[AsignacionOPL]:
 
 
 def listar_semana(session: Session, semana: date) -> List[AsignacionOPL]:
+    """Lista todas las asignaciones de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones de esa semana (cualquier tipo y estado).
+    """
     return list(session.scalars(
         select(AsignacionOPL).where(AsignacionOPL.semana == semana)
     ).all())
@@ -49,6 +77,16 @@ def listar_semana(session: Session, semana: date) -> List[AsignacionOPL]:
 def listar_semana_por_tipo(
     session: Session, semana: date, tipo: TipoAsignacion,
 ) -> List[AsignacionOPL]:
+    """Lista las asignaciones de una semana filtrando por tipo.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+        tipo: Tipo de asignación a filtrar (NORMAL, OBLIGATORIA o ARRASTRE).
+
+    Returns:
+        Lista de asignaciones de la semana con el tipo indicado.
+    """
     return list(session.scalars(
         select(AsignacionOPL).where(
             AsignacionOPL.semana == semana,
@@ -58,6 +96,15 @@ def listar_semana_por_tipo(
 
 
 def listar_no_fijas_semana(session: Session, semana: date) -> List[AsignacionOPL]:
+    """Lista las asignaciones reoptimizables (``es_fija=False``) de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones que el solver puede reasignar libremente.
+    """
     return list(session.scalars(
         select(AsignacionOPL).where(
             AsignacionOPL.semana == semana,
@@ -67,6 +114,17 @@ def listar_no_fijas_semana(session: Session, semana: date) -> List[AsignacionOPL
 
 
 def listar_fijas_con_operario_semana(session: Session, semana: date) -> List[AsignacionOPL]:
+    """Lista las asignaciones fijas que ya tienen operario asignado.
+
+    Sus minutos se descuentan de la capacidad del operario sin reoptimizarlas.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones con ``es_fija=True`` y ``dni_operario`` no nulo.
+    """
     return list(session.scalars(
         select(AsignacionOPL).where(
             AsignacionOPL.semana == semana,
@@ -77,6 +135,16 @@ def listar_fijas_con_operario_semana(session: Session, semana: date) -> List[Asi
 
 
 def listar_obligatorias_semana(session: Session, semana: date) -> List[AsignacionOPL]:
+    """Lista las asignaciones OBLIGATORIA aún reoptimizables de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        Lista de asignaciones OBLIGATORIA con ``es_fija=False``; el solver debe
+        colocarlas sí o sí o el problema resulta infactible.
+    """
     return list(session.scalars(
         select(AsignacionOPL).where(
             AsignacionOPL.semana == semana,
@@ -87,6 +155,17 @@ def listar_obligatorias_semana(session: Session, semana: date) -> List[Asignacio
 
 
 def ids_opls_asignadas_otras_semanas(session: Session, semana: date) -> set[str]:
+    """Obtiene los ids de OPL que ya están asignados en semanas distintas.
+
+    Sirve para excluir del reparto de una semana las OPLs comprometidas en otra.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana que se está planificando.
+
+    Returns:
+        Conjunto de ids de OPL con asignación en cualquier semana ≠ ``semana``.
+    """
     stmt = select(AsignacionOPL.id_opl).where(AsignacionOPL.semana != semana).distinct()
     return set(session.scalars(stmt).all())
 
@@ -163,10 +242,22 @@ def leer_detalle_semana(session: Session, semana: date) -> list[tuple]:
 # ─── Mutaciones simples (NO hacen commit) ───────────────────────────────────
 
 def anadir(session: Session, asignacion: AsignacionOPL) -> None:
+    """Marca una asignación para inserción (sin hacer ``commit``).
+
+    Args:
+        session: Sesión de base de datos activa.
+        asignacion: Instancia a persistir.
+    """
     session.add(asignacion)
 
 
 def eliminar(session: Session, asignacion: AsignacionOPL) -> None:
+    """Marca una asignación para borrado (sin hacer ``commit``).
+
+    Args:
+        session: Sesión de base de datos activa.
+        asignacion: Instancia a eliminar.
+    """
     session.delete(asignacion)
 
 

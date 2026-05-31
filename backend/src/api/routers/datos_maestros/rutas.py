@@ -26,6 +26,7 @@ router = APIRouter()
 
 @router.get("/familias", response_model=list[FamiliaOut], responses={500: {"model": ErrorOut}})
 def get_familias():
+	"""Lista todas las familias con su experiencia requerida."""
 	with get_session() as session:
 		return [
 			FamiliaOut(descripcion=f.descripcion, experiencia_requerida=f.experiencia_requerida)
@@ -35,6 +36,7 @@ def get_familias():
 
 @router.get("/articulos", response_model=list[ArticuloOut], responses={500: {"model": ErrorOut}})
 def get_articulos():
+	"""Lista todos los artículos recorriendo familias, con peso y tiempo estándar."""
 	with get_session() as session:
 		articulos = []
 		for f in familia_service.leer_todas_familias(session):
@@ -51,6 +53,7 @@ def get_articulos():
 
 @router.get("/operarios", response_model=list[OperarioOut], responses={500: {"model": ErrorOut}})
 def get_operarios():
+	"""Lista todos los operarios con su capacidad semanal en horas."""
 	with get_session() as session:
 		return [
 			OperarioOut(dni=op.dni, nombre_completo=op.nombre_completo, horas_semanales=op.horas_semanales)
@@ -60,6 +63,7 @@ def get_operarios():
 
 @router.get("/operario-familia", response_model=list[OperarioFamiliaOut], responses={500: {"model": ErrorOut}})
 def get_operario_familia():
+	"""Lista las cualificaciones (experiencia por familia) de cada operario."""
 	with get_session() as session:
 		resultado = []
 		for op in operario_service.leer_todos_operarios(session):
@@ -74,6 +78,7 @@ def get_operario_familia():
 
 @router.get("/operario-articulo", response_model=list[OperarioArticuloOut], responses={500: {"model": ErrorOut}})
 def get_operario_articulo():
+	"""Lista los tiempos específicos por artículo definidos para cada operario."""
 	with get_session() as session:
 		resultado = []
 		for op in operario_service.leer_todos_operarios(session):
@@ -88,6 +93,7 @@ def get_operario_articulo():
 
 @router.get("/opls", response_model=list[OplOut], responses={500: {"model": ErrorOut}})
 def get_opls():
+	"""Lista todas las OPLs con su tiempo estimado y el operario asignado, si lo hay."""
 	with get_session() as session:
 		resultado = []
 		for opl in opl_service.leer_todas_opls(session):

@@ -81,6 +81,13 @@ interface Props {
   solverBloqueo?: boolean
 }
 
+/**
+ * Asistente de optimización en 3 pasos: selección de OPLs, configuración (perfil y
+ * tiempo) y ejecución con seguimiento del progreso por fases.
+ *
+ * Recibe todo su estado y callbacks desde {@link RepartoDetalle}; es un componente
+ * controlado sin estado de negocio propio.
+ */
 export default function WizardView({
   step, setStep,
   canGoToConfig, canGoToExec, hasBeenOptimized,

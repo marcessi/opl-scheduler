@@ -118,6 +118,20 @@ def _construir_config(req: OptimizarSemanaRequest) -> Configuracion:
     },
 )
 def optimize_week(semana: date, req: OptimizarSemanaRequest):
+    """Lanza la optimización de una semana en un subproceso (respuesta 202).
+
+    Valida que no haya otra optimización en curso ni semanas anteriores sin
+    aprobar, filtra las OPLs ya comprometidas en otras semanas y arranca el
+    solver en segundo plano; el progreso se consulta aparte.
+
+    Args:
+        semana: Lunes ISO de la semana a optimizar.
+        req: Parámetros (OPLs, presupuesto de tiempo y perfil).
+
+    Raises:
+        ConflictError: si ya hay una optimización activa o la semana anterior
+            sigue pendiente de aprobación.
+    """
     if SOLVER_STATE.is_running():
         raise ConflictError(
             f"Ya hay una optimización en curso para la semana {SOLVER_STATE.semana}"
@@ -260,6 +274,18 @@ def _supervisar_solver(
     responses={404: {"model": ErrorOut}, 409: {"model": ErrorOut}},
 )
 def get_optimization_result(semana: date):
+    """Devuelve el resultado de la última optimización de una semana.
+
+    Args:
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        El resultado (``ResultadoOut``) con asignaciones, cargas y métricas.
+
+    Raises:
+        ConflictError: si la optimización de esa semana sigue en curso.
+        NotFoundError: si no hay resultado cacheado para la semana.
+    """
     if SOLVER_STATE.is_running() and SOLVER_STATE.semana == semana:
         raise ConflictError("La optimización aún está en curso")
 

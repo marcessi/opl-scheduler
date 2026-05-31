@@ -449,6 +449,7 @@ function ExportModal({ onClose }: { onClose: () => void }) {
 
 // ── Página principal ───────────────────────────────────────────────────────────
 
+/** Página de datos maestros: importación de Excel y consulta de operarios, artículos, familias y OPLs. */
 export default function DatosMaestros() {
   const [activeTab, setActiveTab]   = useState(TABS[0]!.key)
   const [rows, setRows]             = useState<Record<string, unknown>[] | null>(null)

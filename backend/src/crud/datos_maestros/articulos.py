@@ -7,6 +7,15 @@ from src.database.schema import Articulo
 
 
 def leer(session: Session, referencia: str) -> Optional[Articulo]:
+    """Lee un artículo por su referencia.
+
+    Args:
+        session: Sesión de base de datos activa.
+        referencia: Referencia del artículo.
+
+    Returns:
+        El ``Articulo`` encontrado, o ``None`` si no existe.
+    """
     return session.scalars(select(Articulo).where(Articulo.referencia == referencia)).first()
 
 
@@ -21,8 +30,25 @@ def leer_bulk(session: Session, refs: list[str]) -> List[Articulo]:
 
 
 def listar_por_familia(session: Session, familia: str) -> List[Articulo]:
+    """Lista los artículos de una familia.
+
+    Args:
+        session: Sesión de base de datos activa.
+        familia: Descripción de la familia.
+
+    Returns:
+        Lista de artículos pertenecientes a esa familia.
+    """
     return list(session.scalars(select(Articulo).where(Articulo.familia == familia)).all())
 
 
 def contar(session: Session) -> int:
+    """Cuenta el total de artículos.
+
+    Args:
+        session: Sesión de base de datos activa.
+
+    Returns:
+        Número de artículos registrados.
+    """
     return session.scalar(select(func.count()).select_from(Articulo))

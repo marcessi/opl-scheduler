@@ -16,6 +16,18 @@ from src.exceptions import NotFoundError
 
 
 def construir_resumen(session: Session, reparto: Reparto) -> RepartoResumenOut:
+    """Construye el DTO de resumen de un reparto.
+
+    Agrega los recuentos de OPLs asignadas y pendientes junto al estado de cada
+    fase del solver.
+
+    Args:
+        session: Sesión de base de datos activa.
+        reparto: Reparto cuyo resumen se construye.
+
+    Returns:
+        El DTO ``RepartoResumenOut`` con los totales y estados de la semana.
+    """
     asigs = asignaciones_crud.listar_semana(session, reparto.semana)
     n_asignadas = sum(1 for a in asigs if a.dni_operario is not None)
     n_pendientes = sum(1 for a in asigs if a.dni_operario is None)
@@ -34,6 +46,19 @@ def construir_resumen(session: Session, reparto: Reparto) -> RepartoResumenOut:
 
 
 def construir_detalle(session: Session, reparto: Reparto) -> RepartoDetalleOut:
+    """Construye el DTO de detalle de un reparto, fila a fila.
+
+    Recupera las asignaciones con sus joins (OPL, artículo, experiencia) en una
+    sola query, calcula si cada asignación es óptima (operario suficientemente
+    cualificado) y ordena dejando los ARRASTRE al final.
+
+    Args:
+        session: Sesión de base de datos activa.
+        reparto: Reparto cuyo detalle se construye.
+
+    Returns:
+        El DTO ``RepartoDetalleOut`` con la lista de asignaciones enriquecidas.
+    """
     filas = asignaciones_crud.leer_detalle_semana(session, reparto.semana)
 
     asignaciones: list[AsignacionDetalleOut] = []

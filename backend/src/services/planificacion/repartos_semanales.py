@@ -38,10 +38,30 @@ def leer_repartos(
     antes_de: date = None,
     aprobado: bool = None,
 ) -> list[Reparto]:
+    """Lista repartos aplicando filtros opcionales.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Si se indica, devuelve solo el reparto de esa semana.
+        antes_de: Si se indica, restringe a semanas anteriores.
+        aprobado: Si se indica, filtra por estado de aprobación.
+
+    Returns:
+        Lista de repartos que cumplen los filtros, ordenados por semana.
+    """
     return repartos_crud.listar(session, semana=semana, antes_de=antes_de, aprobado=aprobado)
 
 
 def leer_reparto(session: Session, semana: date) -> Optional[Reparto]:
+    """Lee el reparto de una semana.
+
+    Args:
+        session: Sesión de base de datos activa.
+        semana: Lunes ISO de la semana.
+
+    Returns:
+        El ``Reparto`` de esa semana, o ``None`` si no existe.
+    """
     return repartos_crud.leer(session, semana)
 
 

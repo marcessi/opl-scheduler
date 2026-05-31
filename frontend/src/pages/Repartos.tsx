@@ -207,6 +207,7 @@ function ResolverSemanaModal({ bloqueada, destino, obligatoriasPendientes, loadi
   )
 }
 
+/** Página de listado de repartos: muestra los repartos existentes y permite crear/abrir una semana. */
 export default function Repartos() {
   const [repartos, setRepartos] = useState<RepartoResumenOut[] | null>(null)
   const [error, setError] = useState('')

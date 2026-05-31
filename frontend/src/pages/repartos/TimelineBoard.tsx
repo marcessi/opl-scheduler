@@ -803,6 +803,24 @@ interface Props {
   articulosByRef?: Map<string, string>
 }
 
+/**
+ * Tablero de asignaciones por operario con drag & drop.
+ *
+ * Permite mover OPLs entre operarios, fijar/desfijar asignaciones, reoptimizar,
+ * limpiar selectivamente, añadir OPLs sin repartir y exportar a Excel. En modo
+ * `readonly` solo muestra el reparto sin permitir cambios.
+ * @param asignaciones Asignaciones actuales a pintar.
+ * @param operarios Operarios (columnas del tablero).
+ * @param onDrop Callback al soltar una OPL sobre un operario.
+ * @param onToggleFija Callback para fijar/desfijar una asignación.
+ * @param readonly Si el tablero es de solo lectura (reparto aprobado).
+ * @param onExportExcel Exporta el reparto a Excel.
+ * @param onReoptimize Relanza la optimización.
+ * @param onLimpiarSelectivo Aplica una limpieza selectiva.
+ * @param oplsSinReparto OPLs disponibles para añadir al reparto.
+ * @param onAddOpls Añade OPLs seleccionadas al reparto.
+ * @param articulosByRef Mapa referencia→nombre de artículo.
+ */
 export default function TimelineBoard({ asignaciones, operarios, onDrop, onToggleFija, readonly, onExportExcel, onReoptimize, onLimpiarSelectivo, oplsSinReparto, onAddOpls, articulosByRef }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [draggingOpl, setDraggingOpl] = useState<DraggingOpl | null>(null)

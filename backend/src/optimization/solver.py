@@ -1,8 +1,8 @@
 """
-Modelo CP-SAT para la asignacion de OPLs a operarios.
+Modelo CP-SAT para la asignación de OPLs a operarios.
 
 Flujo de uso:
-    datos     = cargar_datos_problema(session, ids_opls_normales, semana)  # loader.py
+    datos     = cargar_datos_problema(session, ids_opls_normales, semana)  # cargador_problema.py
     resultado = resolver(datos, config)
 
 MVP — dos tipos de OPL:

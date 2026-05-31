@@ -13,6 +13,16 @@ interface Props {
   showFases?: boolean
 }
 
+/**
+ * Panel de resumen de un reparto: totales, utilización, métricas y estado de las fases.
+ * @param semana Lunes ISO de la semana.
+ * @param isAprobado Si el reparto ya está aprobado.
+ * @param reparto Detalle del reparto a resumir.
+ * @param operarios Operarios para cruzar nombres y capacidades.
+ * @param resultado Resultado de la última optimización, si lo hay.
+ * @param optimizeError Mensaje de error de la optimización, si lo hubo.
+ * @param showFases Si se muestra el desglose por fases del solver.
+ */
 export default function ResumenReparto({
   semana,
   isAprobado,

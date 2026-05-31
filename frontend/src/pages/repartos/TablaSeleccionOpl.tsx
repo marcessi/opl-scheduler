@@ -11,6 +11,15 @@ interface Props {
   searchable?: boolean
 }
 
+/**
+ * Tabla de selección de OPLs con búsqueda, scroll infinito y selección por rango.
+ * @param opls OPLs a listar (`null` mientras cargan).
+ * @param selectedIds Ids actualmente seleccionados.
+ * @param obligatoriaIds Ids marcados como obligatorios (no deseleccionables).
+ * @param onChange Callback con la nueva selección de ids.
+ * @param articulosByRef Mapa referencia→nombre de artículo para mostrar descripciones.
+ * @param searchable Si se muestra el buscador.
+ */
 export default function TablaSeleccionOpl({
   opls,
   selectedIds,

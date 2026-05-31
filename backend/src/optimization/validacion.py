@@ -1,5 +1,5 @@
 """
-Modulo de validaciones de reglas de negocio.
+Módulo de validaciones de reglas de negocio.
 """
 
 from typing import List
@@ -11,7 +11,7 @@ from src.services.planificacion import opls as opl_service
 
 
 class ResultadoValidacion:
-    """Resultado de una validacion con detalles de errores y advertencias."""
+    """Resultado de una validación con detalles de errores y advertencias."""
 
     def __init__(self):
         self.valido = True

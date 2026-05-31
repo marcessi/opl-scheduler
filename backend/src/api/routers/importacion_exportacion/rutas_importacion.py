@@ -133,6 +133,20 @@ async def carga(
 	modo: str = Query("actualizar"),
 	entidades: list[str] = Query(default=[]),
 ):
+	"""Importa datos maestros desde un Excel (única vía de alta/modificación).
+
+	Args:
+		archivo: Fichero Excel subido con las hojas de datos maestros.
+		modo: ``"actualizar"`` (merge) o ``"reemplazar"`` (sustituye).
+		entidades: Subconjunto de entidades a importar; vacío = todas.
+
+	Returns:
+		``CargaOut`` con importados/omitidos por entidad. Los errores de detalle
+		quedan disponibles para descargar vía ``/carga/errores/excel``.
+
+	Raises:
+		DomainValidationError: si el modo o alguna entidad no son válidos.
+	"""
 	if modo not in _MODOS_VALIDOS:
 		raise DomainValidationError("'modo' debe ser 'reemplazar' o 'actualizar'")
 
@@ -176,6 +190,14 @@ async def carga(
     dependencies=[Depends(bloquear_si_solver_activo)],
 )
 def crear_opl_manual(body: OplCrearManualRequest):
+    """Crea una OPL manualmente (id autogenerado con prefijo ``MAN``).
+
+    Args:
+        body: Referencia de artículo y cantidad a producir.
+
+    Returns:
+        La OPL creada (``OplOut``), sin operario asignado.
+    """
     with get_session() as session:
         opl = opl_service.crear_opl_manual(session, body.ref_articulo, body.cantidad)
         return OplOut(
@@ -189,6 +211,14 @@ def crear_opl_manual(body: OplCrearManualRequest):
 
 @router.get("/carga/errores/excel", responses={404: {"model": ErrorOut}, 500: {"model": ErrorOut}})
 def exportar_errores_importacion_excel():
+	"""Descarga en Excel los errores de la última importación realizada.
+
+	Returns:
+		``StreamingResponse`` con el ``.xlsx`` de errores.
+
+	Raises:
+		NotFoundError: si no hay errores registrados de una importación previa.
+	"""
 	if not _ULTIMOS_ERRORES_IMPORTACION:
 		raise NotFoundError("No hay errores de importación para exportar")
 

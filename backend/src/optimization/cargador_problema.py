@@ -1,7 +1,7 @@
 """
-Carga de datos de la BD y construccion del problema de asignacion.
+Carga de datos de la BD y construcción del problema de asignación.
 
-Transforma entidades ORM en estructuras numericas puras (ProblemaAsignacion)
+Transforma entidades ORM en estructuras numéricas puras (ProblemaAsignacion)
 listas para ser consumidas por el solver.
 """
 
@@ -31,7 +31,7 @@ from src.exceptions import DomainValidationError
 @dataclass
 class ProblemaAsignacion:
     """
-    Representacion del problema de asignacion lista para el solver.
+    Representación del problema de asignación lista para el solver.
 
     El orden de ids_opls es: OPLs normales primero, luego obligatorias.
     Los índices en `obligatorias` corresponden a la posición en ids_opls.

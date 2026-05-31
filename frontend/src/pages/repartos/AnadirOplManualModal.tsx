@@ -9,6 +9,12 @@ interface Props {
   onCreated: (opl: OplOut) => void
 }
 
+/**
+ * Modal para crear una OPL manualmente eligiendo artículo y cantidad.
+ * @param articulos Artículos disponibles para asociar a la OPL.
+ * @param onClose Cierra el modal sin crear nada.
+ * @param onCreated Callback con la OPL creada tras el alta.
+ */
 export default function AnadirOplManualModal({ articulos, onClose, onCreated }: Props) {
   const [query, setQuery] = useState('')
   const [refSeleccionada, setRefSeleccionada] = useState<string | null>(null)

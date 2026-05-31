@@ -18,6 +18,7 @@ def ejecutar_solver_en_subproceso(datos, config, cola_progreso) -> None:
         from src.optimization.solver import resolver
 
         def on_phase(fase: str, estado: str) -> None:
+            """Publica un evento de cambio de fase en la cola de progreso."""
             try:
                 cola_progreso.put({"tipo": "fase", "fase": fase, "estado": estado})
             except Exception:

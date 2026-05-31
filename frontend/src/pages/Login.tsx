@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
+/** Página de inicio de sesión: formulario de credenciales contra `/auth/login`. */
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()

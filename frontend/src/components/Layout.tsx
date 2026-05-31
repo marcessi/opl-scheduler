@@ -3,6 +3,13 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useSolver } from '../context/useSolver'
 
+/**
+ * Marco común de la app: navegación lateral, cabecera y banner del solver.
+ *
+ * Cuando hay una optimización en curso en otra vista, muestra un banner con los
+ * minutos transcurridos enlazando a la semana correspondiente.
+ * @param children Contenido de la página a renderizar dentro del marco.
+ */
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
   const { activo, estado } = useSolver()

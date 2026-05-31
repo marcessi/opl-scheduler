@@ -300,6 +300,7 @@ function RepartosRecientes({ repartos, onRowClick }: { repartos: RepartoResumenO
 }
 
 /* ── Página ──────────────────────────────────────────────────── */
+/** Página de inicio: calendario de semanas con el estado de cada reparto y accesos rápidos. */
 export default function Dashboard() {
   const [repartos, setRepartos] = useState<RepartoResumenOut[] | null>(null)
   const [estadoOptim, setEstadoOptim] = useState<EstadoOptimizacionOut | null>(null)

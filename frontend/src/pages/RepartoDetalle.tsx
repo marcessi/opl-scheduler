@@ -22,6 +22,10 @@ import type {
 
 // ── Página principal ───────────────────────────────────────────────────────────
 
+/**
+ * Página de detalle de una semana: orquesta el wizard de optimización y la vista de
+ * resultados (timeline de asignaciones, ajustes manuales, aprobación y exportación).
+ */
 export default function RepartoDetalle() {
   const { semana } = useParams<{ semana: string }>()
   const { activo: solverActivo, estado: solverEstado, refrescar: solverRefrescar } = useSolver()

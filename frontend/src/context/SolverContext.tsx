@@ -15,6 +15,13 @@ const ESTADO_VACIO: EstadoOptimizacionOut = {
   n_opls: null,
 }
 
+/**
+ * Provider del estado global del solver.
+ *
+ * Hace polling del endpoint de estado mientras hay sesión: cada 2 s si hay una
+ * optimización activa y cada 10 s en reposo. Expone `refrescar` para sondear bajo
+ * demanda (p. ej. tras lanzar una optimización).
+ */
 export function SolverProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [estado, setEstado] = useState<EstadoOptimizacionOut>(ESTADO_VACIO)

@@ -58,6 +58,11 @@ function ResultCard({ variant, icon, count, label }: {
   )
 }
 
+/**
+ * Modal para pegar OPLs en bloque desde el portapapeles (p. ej. copiadas de Excel).
+ * @param onClose Cierra el modal.
+ * @param onPegarDone Callback al terminar el pegado/importación.
+ */
 export default function PegarOplModal({ onClose, onPegarDone }: Props) {
   const [texto, setTexto] = useState('')
   const [resultado, setResultado] = useState<PegarResult | null>(null)
