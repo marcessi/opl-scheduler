@@ -294,6 +294,7 @@ opl-scheduler/
 │   │   ├── io/               # Importación/exportación Excel
 │   │   └── config/           # Settings (DB, JWT, CORS)
 │   ├── tests/                # Suite de pytest
+│   ├── docs/                 # Documentación Sphinx (autodoc + napoleon)
 │   ├── alembic/              # Migraciones de BD
 │   └── requirements.txt
 ├── frontend/
@@ -320,6 +321,7 @@ opl-scheduler/
 | **Autenticación** | JWT (python-jose) · bcrypt |
 | **Infraestructura** | Docker · Docker Compose |
 | **Testing** | pytest |
+| **Documentación** | Sphinx (backend) · JSDoc (frontend) · OpenAPI/Swagger |
 
 ---
 
