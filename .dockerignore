@@ -46,12 +46,10 @@ backend/data/
 # Tests (no necesarios en imagen prod)
 backend/tests/
 backend/pytest.ini
-backend/scripts/
 
 # Docs
 docs/
 *.md
-!frontend/README.md
 
 # IDE
 .vscode

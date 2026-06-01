@@ -2,6 +2,7 @@
 Instancia principal de la aplicación FastAPI.
 """
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -26,10 +27,18 @@ from src.api.routers.importacion_exportacion import import_router, export_router
 from src.api.routers.planificacion import router as planificacion_router
 from src.database import init_db
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Inicializa la base de datos (crea tablas y usuario admin) al arrancar."""
+    init_db()
+    yield
+
+
 app = FastAPI(
     title="OPL Scheduler API",
     description="API para gestión y optimización de repartos de OPLs",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Trust X-Forwarded-* headers cuando hay un load balancer delante (Azure App
@@ -46,12 +55,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-def startup_event():
-    """Inicializa la base de datos (crea tablas y usuario admin) al arrancar."""
-    init_db()
-
 
 app.include_router(auth_router)
 app.include_router(health.router)
