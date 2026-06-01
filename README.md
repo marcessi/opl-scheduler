@@ -30,6 +30,7 @@ Optimiza el reparto de carga de trabajo respetando cualificaciones, capacidad y 
 - [Tests](#-tests)
 - [Documentación del código](#-documentación-del-código)
 - [Desarrollo](#-desarrollo)
+- [Despliegue en producción](#-despliegue-en-producción)
 - [Estructura del proyecto](#-estructura-del-proyecto)
 - [Stack tecnológico](#-stack-tecnológico)
 
@@ -279,6 +280,28 @@ uvicorn src.api.app:app --reload   # http://127.0.0.1:8000
 
 ---
 
+## 🚀 Despliegue en producción
+
+Para **desarrollo local no necesitas configurar nada**: `docker compose up` ya trae credenciales de desarrollo. Esta sección solo aplica si despliegas la aplicación fuera de tu máquina (un servidor, Azure App Service, etc.).
+
+Copia la plantilla [`.env.example`](.env.example) como `.env` y rellena los valores:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Para qué sirve |
+|----------|----------------|
+| `ENV=production` | Activa las **validaciones estrictas** (sin las de abajo, el arranque falla). |
+| `DATABASE_URL` · `POSTGRES_PASSWORD` | Conexión y contraseña de PostgreSQL (no uses las de desarrollo). |
+| `JWT_SECRET_KEY` | Clave de firma de los tokens. Genérala con `python -c "import secrets; print(secrets.token_hex(32))"`. |
+| `CORS_ORIGINS` | Dominios permitidos, separados por coma. **No puede ser `*`** en producción. |
+| `ADMIN_BOOTSTRAP_PASSWORD` | Contraseña inicial del usuario `admin`. Cámbiala tras el primer login. |
+
+Con `ENV=production`, el backend confía en las cabeceras `X-Forwarded-*` (para funcionar tras un reverse proxy) y **rechaza arrancar** si `JWT_SECRET_KEY` falta o si `CORS_ORIGINS` es `*`, evitando configuraciones inseguras por descuido.
+
+---
+
 ## 📁 Estructura del proyecto
 
 ```
@@ -302,7 +325,8 @@ opl-scheduler/
 │       ├── api/              # Cliente HTTP + tipos del OpenAPI
 │       ├── pages/            # Vistas (Dashboard, Repartos, ...)
 │       ├── components/       # Componentes reutilizables
-│       └── context/          # Estado global (auth)
+│       ├── context/          # Estado global (auth)
+│       └── utils/            # Utilidades (cálculo de semanas, ...)
 └── deploy/
     ├── Dockerfile            # Build multistage (frontend + backend)
     └── db-init/              # Script SQL inicial (crea la BD de tests)
