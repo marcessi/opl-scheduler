@@ -59,6 +59,7 @@ El resultado es un reparto **óptimo y explicable**, revisable y ajustable desde
 ```bash
 git clone https://github.com/marcessi/opl-scheduler.git
 cd opl-scheduler
+cp .env.example .env   # valores de desarrollo listos para usar
 docker compose up --build
 ```
 
@@ -285,23 +286,25 @@ uvicorn src.api.app:app --reload   # http://127.0.0.1:8000
 
 ## 🚀 Despliegue en producción
 
-Para **desarrollo local no necesitas configurar nada**: `docker compose up` ya trae credenciales de desarrollo. Esta sección solo aplica si despliegas la aplicación fuera de tu máquina (un servidor, Azure App Service, etc.).
-
-Copia la plantilla [`.env.example`](.env.example) como `.env` y rellena los valores:
+El proyecto usa un fichero `.env` para todas las variables de entorno. El flujo es el mismo para desarrollo y producción: copiar la plantilla y ajustar los valores.
 
 ```bash
 cp .env.example .env
 ```
 
+**Desarrollo local:** los valores por defecto del `.env.example` ya funcionan. No hay que cambiar nada.
+
+**Producción:** edita `.env` y sustituye los valores marcados con `CAMBIA_ESTO`:
+
 | Variable | Para qué sirve |
 |----------|----------------|
-| `ENV=production` | Activa las **validaciones estrictas** (sin las de abajo, el arranque falla). |
-| `DATABASE_URL` · `POSTGRES_PASSWORD` | Conexión y contraseña de PostgreSQL (no uses las de desarrollo). |
+| `POSTGRES_PASSWORD` | Contraseña de PostgreSQL. |
+| `DATABASE_URL` | Cadena de conexión completa a PostgreSQL. |
 | `JWT_SECRET_KEY` | Clave de firma de los tokens. Genérala con `python -c "import secrets; print(secrets.token_hex(32))"`. |
 | `CORS_ORIGINS` | Dominios permitidos, separados por coma. **No puede ser `*`** en producción. |
 | `ADMIN_BOOTSTRAP_PASSWORD` | Contraseña inicial del usuario `admin`. Cámbiala tras el primer login. |
 
-Con `ENV=production`, el backend confía en las cabeceras `X-Forwarded-*` (para funcionar tras un reverse proxy) y **rechaza arrancar** si `JWT_SECRET_KEY` falta o si `CORS_ORIGINS` es `*`, evitando configuraciones inseguras por descuido.
+Con `ENV=production`, el backend **rechaza arrancar** si `JWT_SECRET_KEY` falta o si `CORS_ORIGINS` es `*`, evitando configuraciones inseguras por descuido.
 
 ---
 

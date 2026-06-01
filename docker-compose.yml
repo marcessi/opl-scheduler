@@ -3,14 +3,14 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: opl_scheduler
-      POSTGRES_USER: opl_user
-      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U opl_user -d opl_scheduler"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -23,11 +23,11 @@ services:
     volumes:
       - ./backend/tests:/app/tests
     environment:
-      DATABASE_URL: postgresql://opl_user:dev_password@db:5432/opl_scheduler
-      TEST_DATABASE_URL: postgresql://opl_user:dev_password@db:5432/opl_scheduler_test
-      JWT_SECRET_KEY: dev-secret-key
-      CORS_ORIGINS: "*"
-      ADMIN_BOOTSTRAP_PASSWORD: admin
+      DATABASE_URL: ${DATABASE_URL}
+      TEST_DATABASE_URL: ${TEST_DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD}
     ports:
       - "8000:8000"
     depends_on:
