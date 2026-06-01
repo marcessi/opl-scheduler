@@ -13,6 +13,7 @@ Optimiza el reparto de carga de trabajo respetando cualificaciones, capacidad y 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![OR-Tools](https://img.shields.io/badge/OR--Tools-CP--SAT-EA4335?logo=google&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
 
 </div>
 
@@ -33,6 +34,7 @@ Optimiza el reparto de carga de trabajo respetando cualificaciones, capacidad y 
 - [Despliegue en producción](#-despliegue-en-producción)
 - [Estructura del proyecto](#-estructura-del-proyecto)
 - [Stack tecnológico](#-stack-tecnológico)
+- [Licencia](#-licencia)
 
 ---
 
@@ -194,7 +196,8 @@ Documentación interactiva completa en **http://localhost:8000/docs**. Endpoints
 | `POST` | `/repartos/{semana}/asignaciones` | Ajustes manuales de asignaciones |
 | `PATCH` | `/repartos/{semana}/asignaciones/{id_opl}` | Editar una asignación |
 | `POST` | `/repartos/{semana}/aprobar` | Aprobar reparto y generar arrastre |
-| `GET` | `/repartos/{semana}/excel` | Exportar reparto a Excel |
+| `GET` | `/repartos/{semana}/excel` | Exportar el **reparto** de una semana a Excel |
+| `GET` | `/exportar/excel` | Exportar **datos maestros** a Excel |
 
 > Los datos maestros son **solo lectura** vía API: todas las altas y modificaciones se hacen exclusivamente mediante `POST /carga` (Excel).
 
@@ -259,7 +262,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Type-check + build de producción |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` (modo strict) |
-| `npm run gen:api` | Regenera los tipos TypeScript desde el OpenAPI |
+| `npm run gen:api` | Regenera los tipos TypeScript desde el OpenAPI (requiere el backend corriendo en `:8000`) |
 
 ### Backend sin Docker
 
@@ -346,6 +349,14 @@ opl-scheduler/
 | **Infraestructura** | Docker · Docker Compose |
 | **Testing** | pytest |
 | **Documentación** | Sphinx (backend) · JSDoc (frontend) · OpenAPI/Swagger |
+
+---
+
+## 📄 Licencia
+
+Distribuido bajo licencia **MIT** © 2026 Marc Escribano. Consulta el fichero [`LICENSE`](LICENSE).
+
+Puedes usar, copiar y modificar el código libremente, siempre que **se mantenga el aviso de copyright y autoría**. El software se ofrece "tal cual", sin garantías.
 
 ---
 
