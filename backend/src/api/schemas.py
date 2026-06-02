@@ -68,9 +68,12 @@ class OplOut(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ImportEntityResult(BaseModel):
-    """Resultado de importar una entidad: importados, omitidos y razones de omisión."""
+    """Resultado de importar una entidad: altas, modificaciones, eliminaciones y omisiones."""
 
-    importados: int
+    anadidas: int
+    modificadas: int
+    eliminados: int = 0
+    conservados_en_uso: int = 0
     omitidos: int
     razones: dict[str, int]
 

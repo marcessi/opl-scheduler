@@ -13,7 +13,19 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login */
+        /**
+         * Login
+         * @description Autentica al usuario y devuelve un JWT.
+         *
+         *     Args:
+         *         body: Credenciales (usuario y contraseña).
+         *
+         *     Returns:
+         *         ``TokenResponse`` con el access token.
+         *
+         *     Raises:
+         *         AuthenticationError: si las credenciales son incorrectas (→ 401).
+         */
         post: operations["login_auth_login_post"];
         delete?: never;
         options?: never;
@@ -28,7 +40,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Me */
+        /**
+         * Me
+         * @description Devuelve el usuario asociado al token de la petición.
+         *
+         *     Args:
+         *         username: Usuario extraído del Bearer token por la dependencia.
+         *
+         *     Returns:
+         *         ``{"username": <usuario>}``.
+         */
         get: operations["me_auth_me_get"];
         put?: never;
         post?: never;
@@ -45,7 +66,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Health */
+        /**
+         * Health
+         * @description Comprueba que el servicio está vivo.
+         *
+         *     Returns:
+         *         ``{"status": "ok"}`` con código 200 si la API responde.
+         */
         get: operations["health_health_get"];
         put?: never;
         post?: never;
@@ -62,7 +89,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Familias */
+        /**
+         * Get Familias
+         * @description Lista todas las familias con su experiencia requerida.
+         */
         get: operations["get_familias_familias_get"];
         put?: never;
         post?: never;
@@ -79,7 +109,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Articulos */
+        /**
+         * Get Articulos
+         * @description Lista todos los artículos recorriendo familias, con peso y tiempo estándar.
+         */
         get: operations["get_articulos_articulos_get"];
         put?: never;
         post?: never;
@@ -96,7 +129,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Operarios */
+        /**
+         * Get Operarios
+         * @description Lista todos los operarios con su capacidad semanal en horas.
+         */
         get: operations["get_operarios_operarios_get"];
         put?: never;
         post?: never;
@@ -113,7 +149,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Operario Familia */
+        /**
+         * Get Operario Familia
+         * @description Lista las cualificaciones (experiencia por familia) de cada operario.
+         */
         get: operations["get_operario_familia_operario_familia_get"];
         put?: never;
         post?: never;
@@ -130,7 +169,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Operario Articulo */
+        /**
+         * Get Operario Articulo
+         * @description Lista los tiempos específicos por artículo definidos para cada operario.
+         */
         get: operations["get_operario_articulo_operario_articulo_get"];
         put?: never;
         post?: never;
@@ -147,7 +189,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Opls */
+        /**
+         * Get Opls
+         * @description Lista todas las OPLs con su tiempo estimado y el operario asignado, si lo hay.
+         */
         get: operations["get_opls_opls_get"];
         put?: never;
         post?: never;
@@ -186,7 +231,22 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Carga */
+        /**
+         * Carga
+         * @description Importa datos maestros desde un Excel (única vía de alta/modificación).
+         *
+         *     Args:
+         *             archivo: Fichero Excel subido con las hojas de datos maestros.
+         *             modo: ``"actualizar"`` (merge) o ``"reemplazar"`` (sustituye).
+         *             entidades: Subconjunto de entidades a importar; vacío = todas.
+         *
+         *     Returns:
+         *             ``CargaOut`` con importados/omitidos por entidad. Los errores de detalle
+         *             quedan disponibles para descargar vía ``/carga/errores/excel``.
+         *
+         *     Raises:
+         *             DomainValidationError: si el modo o alguna entidad no son válidos.
+         */
         post: operations["carga_carga_post"];
         delete?: never;
         options?: never;
@@ -203,7 +263,16 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Crear Opl Manual */
+        /**
+         * Crear Opl Manual
+         * @description Crea una OPL manualmente (id autogenerado con prefijo ``MAN``).
+         *
+         *     Args:
+         *         body: Referencia de artículo y cantidad a producir.
+         *
+         *     Returns:
+         *         La OPL creada (``OplOut``), sin operario asignado.
+         */
         post: operations["crear_opl_manual_opls_crear_post"];
         delete?: never;
         options?: never;
@@ -218,7 +287,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Exportar Errores Importacion Excel */
+        /**
+         * Exportar Errores Importacion Excel
+         * @description Descarga en Excel los errores de la última importación realizada.
+         *
+         *     Returns:
+         *             ``StreamingResponse`` con el ``.xlsx`` de errores.
+         *
+         *     Raises:
+         *             NotFoundError: si no hay errores registrados de una importación previa.
+         */
         get: operations["exportar_errores_importacion_excel_carga_errores_excel_get"];
         put?: never;
         post?: never;
@@ -255,7 +333,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Repartos */
+        /**
+         * List Repartos
+         * @description Lista el resumen de todos los repartos existentes.
+         */
         get: operations["list_repartos_repartos_get"];
         put?: never;
         post?: never;
@@ -272,7 +353,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Estado Optimizacion */
+        /**
+         * Get Estado Optimizacion
+         * @description Devuelve el estado global del solver (semana en curso y progreso, si hay).
+         */
         get: operations["get_estado_optimizacion_repartos_estado_optimizacion_get"];
         put?: never;
         post?: never;
@@ -289,7 +373,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Reparto */
+        /**
+         * Get Reparto
+         * @description Devuelve el detalle del reparto de una semana.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *
+         *     Returns:
+         *         El detalle del reparto (``RepartoDetalleOut``).
+         */
         get: operations["get_reparto_repartos__semana__get"];
         put?: never;
         post?: never;
@@ -306,7 +399,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Optimization Progress */
+        /**
+         * Get Optimization Progress
+         * @description Devuelve el progreso del solver para una semana concreta.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *
+         *     Returns:
+         *         Snapshot del progreso si esa semana se está optimizando, o un estado
+         *         ``SIN_DATOS`` si el solver está en otra semana o inactivo.
+         */
         get: operations["get_optimization_progress_repartos__semana__progreso_get"];
         put?: never;
         post?: never;
@@ -323,7 +426,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Export Reparto Excel */
+        /**
+         * Export Reparto Excel
+         * @description Exporta el reparto de una semana como fichero Excel descargable.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *
+         *     Returns:
+         *         ``StreamingResponse`` con el ``.xlsx`` del reparto.
+         *
+         *     Raises:
+         *         NotFoundError: si no existe el reparto de esa semana.
+         */
         get: operations["export_reparto_excel_repartos__semana__excel_get"];
         put?: never;
         post?: never;
@@ -342,7 +457,22 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Optimize Week */
+        /**
+         * Optimize Week
+         * @description Lanza la optimización de una semana en un subproceso (respuesta 202).
+         *
+         *     Valida que no haya otra optimización en curso ni semanas anteriores sin
+         *     aprobar, filtra las OPLs ya comprometidas en otras semanas y arranca el
+         *     solver en segundo plano; el progreso se consulta aparte.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana a optimizar.
+         *         req: Parámetros (OPLs, presupuesto de tiempo y perfil).
+         *
+         *     Raises:
+         *         ConflictError: si ya hay una optimización activa o la semana anterior
+         *             sigue pendiente de aprobación.
+         */
         post: operations["optimize_week_repartos__semana__optimizar_post"];
         delete?: never;
         options?: never;
@@ -357,7 +487,20 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Optimization Result */
+        /**
+         * Get Optimization Result
+         * @description Devuelve el resultado de la última optimización de una semana.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *
+         *     Returns:
+         *         El resultado (``ResultadoOut``) con asignaciones, cargas y métricas.
+         *
+         *     Raises:
+         *         ConflictError: si la optimización de esa semana sigue en curso.
+         *         NotFoundError: si no hay resultado cacheado para la semana.
+         */
         get: operations["get_optimization_result_repartos__semana__resultado_get"];
         put?: never;
         post?: never;
@@ -376,7 +519,17 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Anadir Asignaciones Manuales */
+        /**
+         * Anadir Asignaciones Manuales
+         * @description Añade manualmente OPLs (sin asignar) al reparto de una semana.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *         req: Lista de ids de OPL a incorporar.
+         *
+         *     Returns:
+         *         ``{"creadas": <n>}`` con el número de asignaciones creadas.
+         */
         post: operations["anadir_asignaciones_manuales_repartos__semana__asignaciones_post"];
         delete?: never;
         options?: never;
@@ -397,7 +550,23 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Modify Assignment */
+        /**
+         * Modify Assignment
+         * @description Modifica el operario y/o el flag de fijación de una asignación.
+         *
+         *     Invalida el resultado cacheado del solver y devuelve el reparto actualizado.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *         id_opl: Identificador de la OPL a modificar.
+         *         req: Nuevo operario y/o valor de ``es_fija``.
+         *
+         *     Returns:
+         *         El detalle actualizado del reparto (``RepartoDetalleOut``).
+         *
+         *     Raises:
+         *         NotFoundError: si no existe el reparto de esa semana.
+         */
         patch: operations["modify_assignment_repartos__semana__asignaciones__id_opl__patch"];
         trace?: never;
     };
@@ -410,7 +579,19 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Limpiar Selectivo */
+        /**
+         * Limpiar Selectivo
+         * @description Aplica operaciones de limpieza selectiva sobre el reparto de una semana.
+         *
+         *     Permite desfijar asignaciones, normalizar obligatorias y/o eliminar arrastres.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana.
+         *         req: Operaciones de limpieza a aplicar.
+         *
+         *     Returns:
+         *         ``LimpiarSelectivoOut`` con el recuento de filas afectadas por operación.
+         */
         post: operations["limpiar_selectivo_repartos__semana__limpiar_selectivo_post"];
         delete?: never;
         options?: never;
@@ -427,7 +608,20 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve Week */
+        /**
+         * Approve Week
+         * @description Aprueba el reparto de una semana y, opcionalmente, genera el arrastre.
+         *
+         *     Consolida la semana y traslada el trabajo pendiente a ``semana_destino``.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana a aprobar.
+         *         req: Semana destino y opciones de arrastre/forzado.
+         *
+         *     Returns:
+         *         El resumen del reparto aprobado (``RepartoResumenOut``) enriquecido con
+         *         los metadatos de la aprobación.
+         */
         post: operations["approve_week_repartos__semana__aprobar_post"];
         delete?: never;
         options?: never;
@@ -439,19 +633,28 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** ActualizarAsignacionRequest */
+        /**
+         * ActualizarAsignacionRequest
+         * @description Cambios manuales sobre una asignación: operario y/o flag de fijación.
+         */
         ActualizarAsignacionRequest: {
             /** Dni Operario */
             dni_operario?: string | null;
             /** Es Fija */
             es_fija?: boolean | null;
         };
-        /** AnadirAsignacionesRequest */
+        /**
+         * AnadirAsignacionesRequest
+         * @description Petición para añadir OPLs al reparto de una semana (lista no vacía).
+         */
         AnadirAsignacionesRequest: {
             /** Ids Opls */
             ids_opls: string[];
         };
-        /** AprobarSemanaRequest */
+        /**
+         * AprobarSemanaRequest
+         * @description Parámetros de aprobación de una semana y de la generación de arrastre.
+         */
         AprobarSemanaRequest: {
             /**
              * Semana Destino
@@ -474,7 +677,10 @@ export interface components {
              */
             forzar_obligatorias_pendientes: boolean;
         };
-        /** ArticuloOut */
+        /**
+         * ArticuloOut
+         * @description Artículo con su familia, peso unitario y tiempo estándar de fabricación.
+         */
         ArticuloOut: {
             /** Referencia */
             referencia: string;
@@ -487,7 +693,10 @@ export interface components {
             /** Tiempo Estandar */
             tiempo_estandar: number;
         };
-        /** AsignacionDetalleOut */
+        /**
+         * AsignacionDetalleOut
+         * @description Fila detallada de un reparto: OPL, artículo, operario y si es óptima.
+         */
         AsignacionDetalleOut: {
             /** Id Opl */
             id_opl: string;
@@ -523,7 +732,10 @@ export interface components {
             /** Es Optima */
             es_optima?: boolean | null;
         };
-        /** AsignacionItemOut */
+        /**
+         * AsignacionItemOut
+         * @description Una asignación del resultado del solver: OPL → operario, con sus minutos.
+         */
         AsignacionItemOut: {
             /** Id Opl */
             id_opl: string;
@@ -539,7 +751,10 @@ export interface components {
             /** Archivo */
             archivo: string;
         };
-        /** CargaOperarioOut */
+        /**
+         * CargaOperarioOut
+         * @description Carga resultante de un operario: minutos, capacidad, utilización y aportes.
+         */
         CargaOperarioOut: {
             /** Nombre */
             nombre: string;
@@ -562,7 +777,10 @@ export interface components {
              */
             peso_kg: number;
         };
-        /** CargaOut */
+        /**
+         * CargaOut
+         * @description Resumen de la importación masiva, con un resultado por tipo de entidad.
+         */
         CargaOut: {
             familias?: components["schemas"]["ImportEntityResult"] | null;
             articulos?: components["schemas"]["ImportEntityResult"] | null;
@@ -571,7 +789,10 @@ export interface components {
             operario_articulo?: components["schemas"]["ImportEntityResult"] | null;
             opls?: components["schemas"]["ImportEntityResult"] | null;
         };
-        /** ErrorOut */
+        /**
+         * ErrorOut
+         * @description Cuerpo de error uniforme de la API: tipo, detalle y código HTTP.
+         */
         ErrorOut: {
             /** Error */
             error: string;
@@ -580,7 +801,10 @@ export interface components {
             /** Code */
             code: number;
         };
-        /** EstadoOptimizacionOut */
+        /**
+         * EstadoOptimizacionOut
+         * @description Estado global del solver: semana en curso y progreso, o vacío si está inactivo.
+         */
         EstadoOptimizacionOut: {
             /** Semana En Curso */
             semana_en_curso?: string | null;
@@ -593,7 +817,10 @@ export interface components {
             /** N Opls */
             n_opls?: number | null;
         };
-        /** FamiliaOut */
+        /**
+         * FamiliaOut
+         * @description Familia de artículos con su nivel de experiencia requerido.
+         */
         FamiliaOut: {
             /** Descripcion */
             descripcion: string;
@@ -605,10 +832,25 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** ImportEntityResult */
+        /**
+         * ImportEntityResult
+         * @description Resultado de importar una entidad: altas, modificaciones, eliminaciones y omisiones.
+         */
         ImportEntityResult: {
-            /** Importados */
-            importados: number;
+            /** Anadidas */
+            anadidas: number;
+            /** Modificadas */
+            modificadas: number;
+            /**
+             * Eliminados
+             * @default 0
+             */
+            eliminados: number;
+            /**
+             * Conservados En Uso
+             * @default 0
+             */
+            conservados_en_uso: number;
             /** Omitidos */
             omitidos: number;
             /** Razones */
@@ -616,7 +858,10 @@ export interface components {
                 [key: string]: number;
             };
         };
-        /** LimpiarSelectivoOut */
+        /**
+         * LimpiarSelectivoOut
+         * @description Recuento de filas afectadas por cada operación de limpieza selectiva.
+         */
         LimpiarSelectivoOut: {
             /**
              * Semana
@@ -639,7 +884,10 @@ export interface components {
              */
             arrastre_eliminados: number;
         };
-        /** LimpiarSelectivoRequest */
+        /**
+         * LimpiarSelectivoRequest
+         * @description Operaciones de limpieza selectiva a aplicar sobre el reparto de una semana.
+         */
         LimpiarSelectivoRequest: {
             /**
              * Desfijar
@@ -657,14 +905,20 @@ export interface components {
              */
             eliminar_arrastre: boolean;
         };
-        /** LoginRequest */
+        /**
+         * LoginRequest
+         * @description Cuerpo de la petición de login con las credenciales del usuario.
+         */
         LoginRequest: {
             /** Username */
             username: string;
             /** Password */
             password: string;
         };
-        /** MetricasOut */
+        /**
+         * MetricasOut
+         * @description Métricas globales de calidad y utilización de un reparto optimizado.
+         */
         MetricasOut: {
             /** N Opls Totales */
             n_opls_totales: number;
@@ -683,7 +937,10 @@ export interface components {
             /** Pct Utilizacion Global */
             pct_utilizacion_global: number;
         };
-        /** OperarioArticuloOut */
+        /**
+         * OperarioArticuloOut
+         * @description Tiempo específico que un operario tarda en un artículo concreto.
+         */
         OperarioArticuloOut: {
             /** Ref Articulo */
             ref_articulo: string;
@@ -692,7 +949,10 @@ export interface components {
             /** Tiempo Estimado */
             tiempo_estimado: number;
         };
-        /** OperarioFamiliaOut */
+        /**
+         * OperarioFamiliaOut
+         * @description Cualificación de un operario en una familia (su experiencia).
+         */
         OperarioFamiliaOut: {
             /** Dni Operario */
             dni_operario: string;
@@ -701,7 +961,10 @@ export interface components {
             /** Experiencia */
             experiencia: number;
         };
-        /** OperarioOut */
+        /**
+         * OperarioOut
+         * @description Operario con su capacidad semanal en horas.
+         */
         OperarioOut: {
             /** Dni */
             dni: string;
@@ -710,14 +973,20 @@ export interface components {
             /** Horas Semanales */
             horas_semanales: number;
         };
-        /** OplCrearManualRequest */
+        /**
+         * OplCrearManualRequest
+         * @description Datos para crear una OPL manual: artículo y cantidad (> 0).
+         */
         OplCrearManualRequest: {
             /** Ref Articulo */
             ref_articulo: string;
             /** Cantidad */
             cantidad: number;
         };
-        /** OplOut */
+        /**
+         * OplOut
+         * @description Orden de producción con su tiempo estimado y el operario asignado, si lo hay.
+         */
         OplOut: {
             /** Id */
             id: string;
@@ -730,7 +999,10 @@ export interface components {
             /** Asignado A */
             asignado_a?: string | null;
         };
-        /** OptimizarSemanaRequest */
+        /**
+         * OptimizarSemanaRequest
+         * @description Parámetros de la petición de optimización de una semana.
+         */
         OptimizarSemanaRequest: {
             /** Ids Opls */
             ids_opls?: string[] | null;
@@ -744,10 +1016,14 @@ export interface components {
         };
         /**
          * PerfilDelta
+         * @description Perfil de optimización: cuánta calidad se sacrifica a favor de la equidad.
          * @enum {string}
          */
         PerfilDelta: "produccion" | "balanceado" | "personas";
-        /** RepartoDetalleOut */
+        /**
+         * RepartoDetalleOut
+         * @description Detalle completo de un reparto: cabecera de estados y lista de asignaciones.
+         */
         RepartoDetalleOut: {
             /**
              * Semana
@@ -769,7 +1045,10 @@ export interface components {
             /** Asignaciones */
             asignaciones: components["schemas"]["AsignacionDetalleOut"][];
         };
-        /** RepartoResumenOut */
+        /**
+         * RepartoResumenOut
+         * @description Resumen de un reparto: totales, estados de las fases y metadatos de aprobación.
+         */
         RepartoResumenOut: {
             /**
              * Semana
@@ -811,7 +1090,10 @@ export interface components {
             /** Perfil */
             perfil?: string | null;
         };
-        /** ResultadoOut */
+        /**
+         * ResultadoOut
+         * @description Resultado completo de una optimización: estados, asignaciones, cargas y métricas.
+         */
         ResultadoOut: {
             /** Estado */
             estado: string;
@@ -833,7 +1115,10 @@ export interface components {
             cargas: components["schemas"]["CargaOperarioOut"][];
             metricas: components["schemas"]["MetricasOut"];
         };
-        /** TokenResponse */
+        /**
+         * TokenResponse
+         * @description Respuesta del login con el JWT emitido y su tipo (siempre ``bearer``).
+         */
         TokenResponse: {
             /** Access Token */
             access_token: string;

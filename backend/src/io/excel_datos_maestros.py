@@ -20,13 +20,14 @@ import openpyxl
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
-from sqlalchemy import select, delete as sql_delete, insert as sa_insert
+from sqlalchemy import select, func, delete as sql_delete, insert as sa_insert
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.database.schema import (
     Familia, Articulo, Operario, Operario_Familia, Operario_Articulo, OPL,
+    AsignacionOPL,
 )
 
 # Orden de carga respetando dependencias + cabeceras por entidad
@@ -54,6 +55,21 @@ _ORDEN_VACIADO = [
     "opls", "operario_articulo", "operario_familia",
     "articulos", "operarios", "familias",
 ]
+
+# Quién referencia a cada entidad: (modelo_referenciante, columna_fk).
+# Una fila está "en uso" si su PK aparece en alguna de estas columnas, por lo que
+# no se borra en modo reemplazar. asignaciones_opl no es importable (no está en
+# ESQUEMA) y actúa de ancla: protege todo lo que cuelgue de un reparto.
+_REFERENCIAS: dict[str, list[tuple]] = {
+    "opls":              [(AsignacionOPL, "id_opl")],
+    "operario_articulo": [],
+    "operario_familia":  [],
+    "articulos":         [(OPL, "ref_articulo"), (Operario_Articulo, "ref_articulo")],
+    "operarios":         [(Operario_Familia, "dni_operario"),
+                          (Operario_Articulo, "dni_operario"),
+                          (AsignacionOPL, "dni_operario")],
+    "familias":          [(Articulo, "familia"), (Operario_Familia, "familia")],
+}
 
 # Columnas que forman la clave primaria de cada entidad
 _PK: dict[str, list[str]] = {
@@ -109,12 +125,36 @@ _FK: dict[str, list[tuple]] = {
 
 # ─── helpers internos ─────────────────────────────────────────────────────────
 
-def _vaciar_entidades(session: Session, entidades: set[str]) -> None:
-    """Elimina todas las filas de las entidades indicadas respetando el orden de FK."""
+def _borrar_no_referenciadas(
+    session: Session, entidades: set[str]
+) -> dict[str, tuple[int, int]]:
+    """
+    Borra de cada entidad indicada solo las filas que nadie referencia; las filas
+    en uso (por datos operacionales u otros maestros) se conservan.
+
+    Recorre ``_ORDEN_VACIADO`` (hijos antes que padres) para que, al borrar una
+    fila hija no usada, el padre que solo dependía de ella quede también libre y
+    se pueda borrar en su turno. No hace commit: lo gestiona ``cargar_entidades``.
+
+    Devuelve ``{entidad: (eliminadas, conservadas)}``.
+    """
+    stats: dict[str, tuple[int, int]] = {}
     for entidad in _ORDEN_VACIADO:
-        if entidad in entidades:
-            session.execute(sql_delete(_MODELOS[entidad]))
-    session.commit()
+        if entidad not in entidades:
+            continue
+        modelo = _MODELOS[entidad]
+        total = session.scalar(select(func.count()).select_from(modelo)) or 0
+
+        stmt = sql_delete(modelo)
+        for ref_modelo, ref_col in _REFERENCIAS.get(entidad, []):
+            ref_attr = getattr(ref_modelo, ref_col)
+            subq = select(ref_attr).where(ref_attr.isnot(None))
+            pk_attr = getattr(modelo, _PK[entidad][0])
+            stmt = stmt.where(pk_attr.notin_(subq))
+
+        eliminadas = session.execute(stmt).rowcount
+        stats[entidad] = (eliminadas, total - eliminadas)
+    return stats
 
 
 def _leer_filas(session: Session, entidad: str) -> list[list]:
@@ -152,11 +192,20 @@ def _leer_filas(session: Session, entidad: str) -> list[list]:
     return []
 
 
-def _resultado(importados: int, razones: Counter) -> dict:
+def _resultado(
+    anadidas: int,
+    modificadas: int,
+    razones: Counter,
+    conservados_en_uso: int = 0,
+    eliminados: int = 0,
+) -> dict:
     return {
-        "importados": importados,
-        "omitidos":   sum(razones.values()),
-        "razones":    dict(razones),
+        "anadidas":           anadidas,
+        "modificadas":        modificadas,
+        "eliminados":         eliminados,
+        "conservados_en_uso": conservados_en_uso,
+        "omitidos":           sum(razones.values()),
+        "razones":            dict(razones),
     }
 
 
@@ -231,6 +280,14 @@ def _cargar_set_fk(session: Session, entidad: str) -> set:
     return set()
 
 
+def _pks_actuales(session: Session, entidad: str) -> set[tuple]:
+    """Conjunto de PKs presentes en BD para una entidad. Comparar las PKs del
+    Excel con las de BD basta para contar altas, modificaciones y bajas."""
+    modelo = _MODELOS[entidad]
+    cols = [getattr(modelo, c) for c in _PK[entidad]]
+    return {tuple(r) for r in session.execute(select(*cols)).all()}
+
+
 def _validar_fila_mem(
     entidad: str,
     datos: dict,
@@ -283,47 +340,41 @@ def _ejecutar_lote(
     filas: list[dict],
     upsert: bool,
 ) -> tuple[int, Counter]:
-    """Ejecuta un único INSERT sobre un lote de filas. Devuelve (importados, razones)."""
+    """
+    Ejecuta un único INSERT/upsert sobre un lote de filas. Devuelve (importados,
+    razones).
+
+    No hace commit: opera dentro de la transacción única de ``cargar_entidades``.
+    Para no envenenar esa transacción ante un fallo, aísla cada intento en un
+    SAVEPOINT (``begin_nested``); así una fila inválida solo revierte su savepoint.
+    """
     razones: Counter = Counter()
-    try:
+
+    def _stmt(valores: list[dict]):
         if upsert:
-            non_pk = [col for col in filas[0] if col not in pk_cols]
-            stmt = pg_insert(modelo).values(filas)
+            non_pk = [col for col in valores[0] if col not in pk_cols]
+            s = pg_insert(modelo).values(valores)
             if non_pk:
-                stmt = stmt.on_conflict_do_update(
+                return s.on_conflict_do_update(
                     index_elements=pk_cols,
-                    set_={col: getattr(stmt.excluded, col) for col in non_pk},
+                    set_={col: getattr(s.excluded, col) for col in non_pk},
                 )
-            else:
-                stmt = stmt.on_conflict_do_nothing()
-        else:
-            stmt = sa_insert(modelo).values(filas)
-        session.execute(stmt)
-        session.commit()
+            return s.on_conflict_do_nothing()
+        return sa_insert(modelo).values(valores)
+
+    try:
+        with session.begin_nested():
+            session.execute(_stmt(filas))
         return len(filas), razones
     except IntegrityError:
-        session.rollback()
-        # Fallback fila a fila para localizar el error concreto
+        # El lote falló; reintentar fila a fila para localizar la(s) conflictiva(s).
         importados = 0
         for fila in filas:
             try:
-                if upsert:
-                    non_pk = [col for col in fila if col not in pk_cols]
-                    s = pg_insert(modelo).values([fila])
-                    if non_pk:
-                        s = s.on_conflict_do_update(
-                            index_elements=pk_cols,
-                            set_={col: getattr(s.excluded, col) for col in non_pk},
-                        )
-                    else:
-                        s = s.on_conflict_do_nothing()
-                else:
-                    s = sa_insert(modelo).values([fila])
-                session.execute(s)
-                session.commit()
+                with session.begin_nested():
+                    session.execute(_stmt([fila]))
                 importados += 1
             except IntegrityError:
-                session.rollback()
                 razones["Clave duplicada"] += 1
         return importados, razones
 
@@ -399,7 +450,8 @@ def cargar_entidades(
                      Si es None, procesa todas las entidades presentes en el Excel.
 
     Returns:
-        dict { entidad: {"importados": n, "omitidos": m, "razones": {...}} }
+        dict { entidad: {"anadidas": n, "modificadas": n, "eliminados": n,
+                         "conservados_en_uso": n, "omitidos": m, "razones": {...}} }
     """
     if modo not in {"reemplazar", "actualizar"}:
         raise ValueError("'modo' debe ser 'reemplazar' o 'actualizar'")
@@ -407,24 +459,28 @@ def cargar_entidades(
     wb = openpyxl.load_workbook(path, data_only=True)
     seleccionadas = set(entidades) if entidades else set(ESQUEMA.keys())
 
-    # Vaciar antes de cargar las entidades marcadas como "reemplazar"
-    a_vaciar = {e for e in seleccionadas if e in wb.sheetnames} if modo == "reemplazar" else set()
-    if a_vaciar:
-        _vaciar_entidades(session, a_vaciar)
-
     entidades_a_procesar = [e for e in ESQUEMA if e in seleccionadas and e in wb.sheetnames]
+
+    # PKs en BD antes de tocar nada (para comparar contra las del Excel).
+    pks_antes = {e: _pks_actuales(session, e) for e in entidades_a_procesar}
+
+    # En modo reemplazar, borrar primero solo las filas no referenciadas; las que
+    # estén en uso por datos operacionales se conservan y se actualizarán (upsert).
+    a_vaciar = {e for e in seleccionadas if e in wb.sheetnames} if modo == "reemplazar" else set()
+    stats_borrado = _borrar_no_referenciadas(session, a_vaciar) if a_vaciar else {}
+
     resultados: dict[str, dict] = {}
 
-    # Pre-cargar conjuntos de FK para entidades que NO se están reemplazando
-    # (las que sí se reemplazan empiezan vacías y se rellenan tras su importación)
-    sets_fk: dict[str, set] = {}
-    for entidad in ("familias", "articulos", "operarios"):
-        if entidad not in a_vaciar:
-            sets_fk[entidad] = _cargar_set_fk(session, entidad)
-        else:
-            sets_fk[entidad] = set()
+    # Pre-cargar conjuntos de FK con lo que hay en BD tras el borrado selectivo
+    # (en reemplazar son las filas que sobrevivieron por estar en uso).
+    sets_fk: dict[str, set] = {
+        entidad: _cargar_set_fk(session, entidad)
+        for entidad in ("familias", "articulos", "operarios")
+    }
 
-    upsert = modo == "actualizar"
+    # upsert siempre: en reemplazar, las filas conservadas presentes en el Excel
+    # se actualizan en vez de colisionar por PK.
+    upsert = True
     for entidad in entidades_a_procesar:
         ws     = wb[entidad]
 
@@ -456,18 +512,32 @@ def cargar_entidades(
             filas_ok.append(fila)
 
         # Bulk insert / upsert en un único statement
-        importados, extra = _bulk_ejecutar(session, entidad, filas_ok, upsert)
+        _importados, extra = _bulk_ejecutar(session, entidad, filas_ok, upsert)
         razones.update(extra)
 
-        # Actualizar el conjunto FK para que las entidades dependientes puedan validar
+        # Actualizar el conjunto FK para que las entidades dependientes puedan
+        # validar contra los recién importados + los que ya estaban en BD.
         pk_col = _PK[entidad]
         if len(pk_col) == 1:
             col = pk_col[0]
-            sets_fk[entidad] = {f[col] for f in filas_ok}
-            if upsert:
-                # En modo actualizar, también incluir los que ya estaban en BD
-                sets_fk[entidad] |= _cargar_set_fk(session, entidad)
+            sets_fk[entidad] = {f[col] for f in filas_ok} | _cargar_set_fk(session, entidad)
 
-        resultados[entidad] = _resultado(importados, razones)
+        # Comparación de PK (Excel vs BD):
+        #   añadida    → PK del Excel que no existía
+        #   modificada → PK del Excel que ya existía (se reescribe)
+        #   eliminada  → PK que estaba y deja de estar (no viene en el Excel y no
+        #                está referenciada, así que se borra)
+        # Las referenciadas en uso que se conservan no se cuentan como cambio.
+        antes     = pks_antes[entidad]
+        despues   = _pks_actuales(session, entidad)
+        excel_pks = {tuple(f[c] for c in _PK[entidad]) for f in filas_ok}
 
+        anadidas    = len(excel_pks - antes)
+        modificadas = len(excel_pks & antes)
+        eliminados  = len(antes - despues)
+
+        _eliminadas_mecanicas, conservados = stats_borrado.get(entidad, (0, 0))
+        resultados[entidad] = _resultado(anadidas, modificadas, razones, conservados, eliminados)
+
+    session.commit()
     return resultados

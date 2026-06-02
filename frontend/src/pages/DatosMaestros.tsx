@@ -21,6 +21,7 @@ const IconClock      = <Icon paths={<><circle cx="12" cy="12" r="9" /><polyline 
 const IconClipboard  = <Icon paths={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="8" y1="16" x2="13" y2="16" /></>} />
 const IconDownload   = <Icon paths={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>} />
 const IconUpload     = <Icon paths={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>} />
+const IconAlert      = <Icon paths={<><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>} />
 
 // ── Tipos locales ─────────────────────────────────────────────────────────────
 
@@ -212,7 +213,21 @@ function ImportModal({ onClose, onImportDone }: { onClose: () => void; onImportD
   const [error, setError]         = useState('')
   const [resultado, setResultado] = useState<CargaOut | null>(null)
 
-  const hasErrors = resultado && Object.values(resultado).some(r => r && r.omitidos > 0)
+  const totales = ENTIDADES_IMPORT.reduce(
+    (acc, e) => {
+      const r = resultado?.[e.key as keyof CargaOut]
+      if (r) {
+        acc.anadidas    += r.anadidas
+        acc.modificadas += r.modificadas
+        acc.eliminados  += r.eliminados
+        acc.omitidos    += r.omitidos
+      }
+      return acc
+    },
+    { anadidas: 0, modificadas: 0, eliminados: 0, omitidos: 0 },
+  )
+  const totalOmitidos = totales.omitidos
+  const hasErrors = totalOmitidos > 0
 
   function toggleEntidad(key: string) {
     setEntidades(prev =>
@@ -313,6 +328,17 @@ function ImportModal({ onClose, onImportDone }: { onClose: () => void; onImportD
                 ))}
               </div>
 
+              {modo === 'reemplazar' && (
+                <div className="import-warn-banner" role="alert">
+                  <span className="import-warn-icon">{IconAlert}</span>
+                  <div>
+                    <strong>Se borrarán los registros existentes</strong> de las entidades
+                    seleccionadas antes de cargar el archivo. Las filas en uso por repartos
+                    se conservan automáticamente; el resto se elimina.
+                  </div>
+                </div>
+              )}
+
               <div className="modal-section-label" style={{ marginTop: '16px' }}>Archivo Excel</div>
               <input
                 type="file"
@@ -335,29 +361,56 @@ function ImportModal({ onClose, onImportDone }: { onClose: () => void; onImportD
         ) : (
           <div>
             <div className="modal-body">
-              <div className="import-result-grid">
+              <div className="import-metrics">
+                <div className="import-metric import-metric--add">
+                  <span className="import-metric-value">{totales.anadidas}</span>
+                  <span className="import-metric-label">Añadidas</span>
+                </div>
+                <div className="import-metric import-metric--mod">
+                  <span className="import-metric-value">{totales.modificadas}</span>
+                  <span className="import-metric-label">Modificadas</span>
+                </div>
+                <div className="import-metric import-metric--del">
+                  <span className="import-metric-value">{totales.eliminados}</span>
+                  <span className="import-metric-label">Eliminadas</span>
+                </div>
+              </div>
+
+              <div className="import-breakdown">
                 {ENTIDADES_IMPORT.map(e => {
                   const r = resultado[e.key as keyof CargaOut]
                   if (!r) return null
+                  const sinCambios = r.anadidas + r.modificadas + r.eliminados === 0
                   return (
-                    <div key={e.key} className="import-result-row">
-                      <span className="import-result-name">{e.label}</span>
-                      <span className="import-result-ok">{r.importados} importados</span>
-                      {r.omitidos > 0 && (
-                        <span className="import-result-warn">{r.omitidos} omitidos</span>
-                      )}
+                    <div key={e.key} className="import-breakdown-row">
+                      <span className="import-breakdown-name">{e.label}</span>
+                      <span className="import-breakdown-nums">
+                        {r.anadidas > 0    && <em className="ib ib--add">+{r.anadidas}</em>}
+                        {r.modificadas > 0 && <em className="ib ib--mod">~{r.modificadas}</em>}
+                        {r.eliminados > 0  && <em className="ib ib--del">−{r.eliminados}</em>}
+                        {sinCambios && <span className="ib-none">sin cambios</span>}
+                      </span>
                     </div>
                   )
                 })}
               </div>
+
+              {hasErrors && (
+                <div className="import-error-banner" role="alert">
+                  <span className="import-error-icon">{IconAlert}</span>
+                  <div className="import-error-text">
+                    <strong>{totalOmitidos} fila{totalOmitidos === 1 ? '' : 's'} omitida{totalOmitidos === 1 ? '' : 's'}</strong> por
+                    errores de validación. Descarga el detalle para corregir el origen.
+                  </div>
+                  <button className="btn-danger-outline import-error-btn" onClick={handleDescargarErrores}>
+                    Descargar errores
+                  </button>
+                </div>
+              )}
+
               {error && <p className="error-msg" style={{ marginTop: '12px' }}>{error}</p>}
             </div>
             <div className="modal-footer">
-              {hasErrors && (
-                <button className="btn-danger-outline" onClick={handleDescargarErrores}>
-                  Descargar errores
-                </button>
-              )}
               <button className="btn-primary" style={{ width: 'auto' }} onClick={onClose}>
                 Cerrar
               </button>
