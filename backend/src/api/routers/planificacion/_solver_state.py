@@ -30,6 +30,7 @@ class _SolverState:
         self.error: Optional[str] = None
         self.terminado: bool = False
         self.ejecutando: bool = False
+        self.cancelado: bool = False
 
     def is_running(self) -> bool:
         """Indica si hay una optimización en curso.
@@ -73,6 +74,7 @@ class _SolverState:
             self.error = None
             self.terminado = False
             self.ejecutando = True
+            self.cancelado = False
 
     def actualizar_fase(self, fase: str, estado: str) -> None:
         """Actualiza el estado de una fase concreta y el estado global actual.
@@ -110,6 +112,35 @@ class _SolverState:
             self.ejecutando = False
             self.terminado = True
 
+    def solicitar_cancelacion(self):
+        """Marca la optimización en curso como cancelada y devuelve su subproceso.
+
+        El subproceso se devuelve para que el llamante lo termine fuera del lock.
+
+        Returns:
+            El ``multiprocessing.Process`` activo, o ``None`` si no hay ninguna
+            optimización en curso que cancelar.
+        """
+        with self._lock:
+            if not self.ejecutando:
+                return None
+            self.cancelado = True
+            return self.proceso
+
+    def finalizar_cancelado(self) -> None:
+        """Marca la optimización como terminada por cancelación del usuario.
+
+        No deja error ni resultado: la BD no se ha modificado, así que la app
+        vuelve al estado previo al lanzamiento.
+        """
+        with self._lock:
+            self.fase = "CANCELADO"
+            self.estado = "CANCELADO"
+            self.resultado = None
+            self.error = None
+            self.ejecutando = False
+            self.terminado = True
+
     def reset_semana(self, semana: date) -> None:
         """Limpia el resultado cacheado de una semana (para mutaciones manuales)."""
         with self._lock:
@@ -129,6 +160,7 @@ class _SolverState:
                 "estado": self.estado,
                 "ejecutando": self.ejecutando,
                 "terminado": self.terminado,
+                "cancelado": self.cancelado,
                 "inicio_ts": self.inicio_ts,
                 "error": self.error,
                 "config": self.config,

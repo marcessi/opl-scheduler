@@ -77,6 +77,7 @@ interface Props {
   summaryPerfilKey: PerfilKey
   summaryTiempo: string
   onEjecutar: () => void
+  onCancelar: () => void
   onVolverResultados: () => void
   solverBloqueo?: boolean
 }
@@ -96,10 +97,12 @@ export default function WizardView({
   tiempoMaximoMin, setTiempoMaximo,
   progreso, optimizing, optimizeError,
   summaryOplCount, summaryPerfilKey, summaryTiempo,
-  onEjecutar, onVolverResultados,
+  onEjecutar, onCancelar, onVolverResultados,
   solverBloqueo = false,
 }: Props) {
   const [transcurridoSeg, setTranscurridoSeg] = useState(0)
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
   const progresoRef = useRef(progreso)
 
   useEffect(() => {
@@ -109,6 +112,8 @@ export default function WizardView({
   useEffect(() => {
     if (!optimizing) {
       setTranscurridoSeg(0)
+      setConfirmandoCancelar(false)
+      setCancelando(false)
       return
     }
     const inicioTs = progresoRef.current?.inicio_ts ?? null
@@ -131,6 +136,12 @@ export default function WizardView({
   function handleAnterior() {
     if (step === 'config') setStep('opls')
     if (step === 'ejecucion') setStep('config')
+  }
+
+  function handleConfirmarCancelar() {
+    setCancelando(true)
+    setConfirmandoCancelar(false)
+    onCancelar()
   }
 
   function handleSiguiente() {
@@ -195,16 +206,49 @@ export default function WizardView({
             </button>
           )}
           {step === 'ejecucion' ? (
-            <button
-              className="btn-primary wizard-nav-btn"
-              onClick={onEjecutar}
-              disabled={optimizing || totalOpls === 0 || solverBloqueo}
-              title={solverBloqueo ? 'Bloqueado: optimización en curso de otra semana' : undefined}
-            >
-              {optimizing
-                ? 'Optimizando…'
-                : `Ejecutar ${totalOpls} OPL${totalOpls !== 1 ? 's' : ''}`}
-            </button>
+            optimizing ? (
+              confirmandoCancelar ? (
+                <div className="wizard-cancel-confirm">
+                  <span className="wizard-cancel-confirm-text">
+                    {IconAlert} ¿Cancelar? Se perderá el progreso.
+                  </span>
+                  <button
+                    className="btn-ghost wizard-nav-btn"
+                    onClick={() => setConfirmandoCancelar(false)}
+                  >
+                    Seguir
+                  </button>
+                  <button
+                    className="btn-danger wizard-nav-btn"
+                    onClick={handleConfirmarCancelar}
+                  >
+                    Sí, cancelar
+                  </button>
+                </div>
+              ) : (
+                <div className="wizard-exec-actions">
+                  <button className="btn-primary wizard-nav-btn" disabled>
+                    {cancelando ? 'Cancelando…' : 'Optimizando…'}
+                  </button>
+                  <button
+                    className="btn-danger-ghost wizard-nav-btn"
+                    onClick={() => setConfirmandoCancelar(true)}
+                    disabled={cancelando}
+                  >
+                    {cancelando ? 'Cancelando…' : 'Cancelar'}
+                  </button>
+                </div>
+              )
+            ) : (
+              <button
+                className="btn-primary wizard-nav-btn"
+                onClick={onEjecutar}
+                disabled={totalOpls === 0 || solverBloqueo}
+                title={solverBloqueo ? 'Bloqueado: optimización en curso de otra semana' : undefined}
+              >
+                {`Ejecutar ${totalOpls} OPL${totalOpls !== 1 ? 's' : ''}`}
+              </button>
+            )
           ) : (
             <button
               className="btn-primary wizard-nav-btn"

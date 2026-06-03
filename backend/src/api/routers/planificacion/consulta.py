@@ -65,6 +65,7 @@ def get_optimization_progress(semana: date):
             "estado": "SIN_DATOS",
             "ejecutando": False,
             "terminado": False,
+            "cancelado": False,
             "inicio_ts": None,
             "error": None,
             "fases": {},

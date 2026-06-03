@@ -1122,6 +1122,48 @@ th.cell-num { text-align: right; }
 
 .wizard-nav-btn { width: auto !important; }
 
+/* Cancelar optimización en curso */
+.btn-danger {
+  width: 100%;
+  padding: 8px 16px;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-danger:hover:not(:disabled) { background: #b91c1c; }
+.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-danger-ghost {
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-danger-ghost:hover:not(:disabled) { background: #fef2f2; border-color: var(--danger); }
+.btn-danger-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.wizard-exec-actions,
+.wizard-cancel-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wizard-cancel-confirm-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--danger);
+  white-space: nowrap;
+}
+.wizard-cancel-confirm-text svg { flex-shrink: 0; }
+
 /* Cabecera de paso: icono + título + descripción + acciones */
 .wizard-step-head {
   display: flex;

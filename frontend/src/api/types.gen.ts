@@ -480,6 +480,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repartos/{semana}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Optimization
+         * @description Cancela la optimización en curso de una semana sin guardar resultados.
+         *
+         *     Mata el subproceso del solver. Como el resultado sólo se persiste cuando el
+         *     solver termina con éxito, abortar antes deja la BD intacta y la app vuelve al
+         *     estado previo al lanzamiento.
+         *
+         *     Args:
+         *         semana: Lunes ISO de la semana cuya optimización se cancela.
+         *
+         *     Raises:
+         *         ConflictError: si no hay ninguna optimización en curso para esa semana.
+         */
+        post: operations["cancel_optimization_repartos__semana__cancelar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repartos/{semana}/resultado": {
         parameters: {
             query?: never;
@@ -1879,6 +1909,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    cancel_optimization_repartos__semana__cancelar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                semana: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
             /** @description Internal Server Error */

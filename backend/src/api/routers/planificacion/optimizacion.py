@@ -215,6 +215,33 @@ def optimize_week(semana: date, req: OptimizarSemanaRequest):
     return JSONResponse(status_code=202, content={"mensaje": "Optimización iniciada"})
 
 
+@router.post(
+    "/{semana}/cancelar",
+    responses={200: {}, 409: {"model": ErrorOut}, 500: {"model": ErrorOut}},
+)
+def cancel_optimization(semana: date):
+    """Cancela la optimización en curso de una semana sin guardar resultados.
+
+    Mata el subproceso del solver. Como el resultado sólo se persiste cuando el
+    solver termina con éxito, abortar antes deja la BD intacta y la app vuelve al
+    estado previo al lanzamiento.
+
+    Args:
+        semana: Lunes ISO de la semana cuya optimización se cancela.
+
+    Raises:
+        ConflictError: si no hay ninguna optimización en curso para esa semana.
+    """
+    if not SOLVER_STATE.is_running() or SOLVER_STATE.semana != semana:
+        raise ConflictError(f"No hay optimización en curso para la semana {semana}")
+
+    proceso = SOLVER_STATE.solicitar_cancelacion()
+    if proceso is not None and proceso.is_alive():
+        proceso.terminate()
+
+    return JSONResponse(status_code=200, content={"mensaje": "Optimización cancelada"})
+
+
 def _supervisar_solver(
     semana: date,
     proceso,
@@ -232,9 +259,12 @@ def _supervisar_solver(
             except Empty:
                 if not proceso.is_alive():
                     if resultado is None:
-                        SOLVER_STATE.finalizar_error(
-                            "El proceso del solver terminó inesperadamente"
-                        )
+                        if SOLVER_STATE.cancelado:
+                            SOLVER_STATE.finalizar_cancelado()
+                        else:
+                            SOLVER_STATE.finalizar_error(
+                                "El proceso del solver terminó inesperadamente"
+                            )
                     return
                 continue
 

@@ -45,6 +45,7 @@ export interface ProgresoOut {
   estado: string
   ejecutando: boolean
   terminado: boolean
+  cancelado: boolean
   inicio_ts: number | null
   error: string | null
   config: ProgresoConfig | null

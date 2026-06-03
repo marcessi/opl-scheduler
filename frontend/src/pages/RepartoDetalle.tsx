@@ -156,7 +156,13 @@ export default function RepartoDetalle() {
         if (data.terminado) {
           stopPolling()
 
-          if (data.error) {
+          if (data.cancelado) {
+            // La BD no se ha tocado: volver al estado previo al lanzamiento.
+            setOptimizing(false)
+            setProgreso(null)
+            setOptimizeError('')
+            setStep('config')
+          } else if (data.error) {
             setOptimizeError(data.error)
             setOptimizing(false)
           } else {
@@ -231,6 +237,7 @@ export default function RepartoDetalle() {
       estado: 'PENDIENTE',
       ejecutando: true,
       terminado: false,
+      cancelado: false,
       inicio_ts: Date.now() / 1000,
       error: null,
       config: {
@@ -272,6 +279,26 @@ export default function RepartoDetalle() {
       setOptimizing(false)
       setOptimizeError(err instanceof Error ? err.message : 'Error')
     }
+  }
+
+  async function cancelarOptimizacion() {
+    if (!semana) return
+    stopPolling()
+    try {
+      const token = localStorage.getItem('jwt_token')
+      await fetch(`/repartos/${semana}/cancelar`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+    } catch {
+      // aunque falle la petición, revertimos la UI: nada se ha persistido
+    }
+    // La BD no se ha modificado: volver al estado previo al lanzamiento.
+    setOptimizing(false)
+    setProgreso(null)
+    setOptimizeError('')
+    setStep('config')
+    solverRefrescar()
   }
 
   async function limpiarSelectivo(opts: LimpiarOpts) {
@@ -482,6 +509,7 @@ export default function RepartoDetalle() {
             summaryPerfilKey={summaryPerfilKey}
             summaryTiempo={summaryTiempo}
             onEjecutar={ejecutarOptimizacion}
+            onCancelar={cancelarOptimizacion}
             onVolverResultados={() => setForceWizard(false)}
             solverBloqueo={solverBloqueoOtraSemana}
             articulosByRef={articulosByRef}
