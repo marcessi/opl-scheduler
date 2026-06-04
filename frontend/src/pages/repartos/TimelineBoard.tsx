@@ -658,7 +658,6 @@ function FilaOperario({ operario, opls, contentWidthPx, pxPerMin, draggingOpl, o
   const capacidadMin = Math.round(operario.horas_semanales * 60)
   const totalMin     = opls.reduce((s, o) => s + (o.tiempo_planificado ?? 0), 0)
   const pct          = capacidadMin > 0 ? Math.min(100, Math.round((totalMin / capacidadMin) * 100)) : 0
-  const overCap      = totalMin > capacidadMin && capacidadMin > 0
   const capWidthPx   = capacidadMin * pxPerMin
   const empaquetado  = packPx(sorted, pxPerMin, capWidthPx)
 
@@ -694,7 +693,7 @@ function FilaOperario({ operario, opls, contentWidthPx, pxPerMin, draggingOpl, o
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text, #111)', lineHeight: 1.3 }}>
           {operario.nombre_completo ?? operario.dni}
         </div>
-        <div style={{ fontSize: 11, marginTop: 2, color: overCap ? '#ef4444' : 'var(--text-muted, #6b7280)' }}>
+        <div style={{ fontSize: 11, marginTop: 2, color: 'var(--text-muted, #6b7280)' }}>
           {totalMin.toFixed(0)} / {capacidadMin} min ({pct}%)
         </div>
       </div>
@@ -766,15 +765,6 @@ function FilaOperario({ operario, opls, contentWidthPx, pxPerMin, draggingOpl, o
               borderRadius: 0,
             }}
           />
-        )}
-
-        {overCap && !isDragging && (
-          <div style={{
-            position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
-            fontSize: 10, color: '#ef4444', fontWeight: 700, pointerEvents: 'none',
-          }}>
-            ⚠ sobrecarga
-          </div>
         )}
       </div>
     </div>

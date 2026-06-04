@@ -55,7 +55,7 @@ const TABS: TabDef[] = [
     endpoint: '/familias',
     icon: IconLayers,
     cols: [
-      { key: 'descripcion',          label: 'Descripción' },
+      { key: 'descripcion',          label: 'Descripción', mono: true },
       { key: 'experiencia_requerida', label: 'Exp. requerida', numeric: true },
     ],
   },
@@ -90,7 +90,7 @@ const TABS: TabDef[] = [
     icon: IconStar,
     cols: [
       { key: 'dni_operario', label: 'DNI operario', mono: true },
-      { key: 'familia',      label: 'Familia' },
+      { key: 'familia',      label: 'Familia', mono: true },
       { key: 'experiencia',  label: 'Experiencia', numeric: true },
     ],
   },
@@ -112,7 +112,7 @@ const TABS: TabDef[] = [
     icon: IconClipboard,
     cols: [
       { key: 'id',              label: 'ID', mono: true },
-      { key: 'ref_articulo',    label: 'Artículo', mono: true },
+      { key: 'ref_articulo',    label: 'Artículo' },
       { key: 'cantidad',        label: 'Cantidad', numeric: true },
       { key: 'tiempo_estimado', label: 'T. estimado (min)', numeric: true, decimals: true },
       { key: 'asignado_a',      label: 'Asignado a' },

@@ -321,6 +321,8 @@ tbody tr:hover td { background: var(--bg); }
   gap: 2px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .tab-btn {
   padding: 8px 16px;
@@ -331,6 +333,8 @@ tbody tr:hover td { background: var(--bg); }
   cursor: pointer;
   font-size: 14px;
   margin-bottom: -1px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .tab-btn:hover { color: var(--text); }
 .tab-btn.active {
@@ -1105,6 +1109,9 @@ th.cell-num { text-align: right; }
 /* Stepper dentro del header: sin borde ni margen propios */
 .wizard-stepper {
   flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   justify-content: center;
   border-bottom: none !important;
   margin-bottom: 0 !important;
@@ -1113,7 +1120,7 @@ th.cell-num { text-align: right; }
 
 .wizard-nav {
   min-width: 120px;
-  flex-shrink: 0;
+  flex-shrink: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -1152,6 +1159,8 @@ th.cell-num { text-align: right; }
 .wizard-cancel-confirm {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .wizard-cancel-confirm-text {
@@ -1160,7 +1169,7 @@ th.cell-num { text-align: right; }
   gap: 6px;
   font-size: 13px;
   color: var(--danger);
-  white-space: nowrap;
+  white-space: normal;
 }
 .wizard-cancel-confirm-text svg { flex-shrink: 0; }
 
@@ -2208,6 +2217,14 @@ th.cell-num { text-align: right; }
 }
 @media (max-width: 720px) {
   .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* Header del wizard en ventanas estrechas: encoger en vez de desbordar */
+@media (max-width: 860px) {
+  .wizard-header { padding: 0 12px; gap: 8px; }
+  .wizard-header-start, .wizard-nav { min-width: 0; }
+  .wizard-stepper .stepper-label { display: none; }
+  .stepper-item { padding: 10px 10px; }
 }
 
 .kpi-card {
