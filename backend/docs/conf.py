@@ -20,7 +20,7 @@ os.environ.setdefault("JWT_SECRET_KEY", "docs-build-secret")
 # ── Proyecto ────────────────────────────────────────────────────────────────
 project = "OPLscheduler — Backend"
 author = "Marc Escribano"
-copyright = "2026, Marc Escribano"
+copyright = "2026, Marc Escribano Sierra. Todos los derechos reservados."
 release = "0.1.0"
 language = "es"
 

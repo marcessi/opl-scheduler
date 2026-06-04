@@ -13,7 +13,7 @@ Optimiza el reparto de carga de trabajo respetando cualificaciones, capacidad y 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![OR-Tools](https://img.shields.io/badge/OR--Tools-CP--SAT-EA4335?logo=google&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
+![Licencia](https://img.shields.io/badge/Licencia-Propietaria-red)
 
 </div>
 
@@ -357,9 +357,11 @@ opl-scheduler/
 
 ## 📄 Licencia
 
-Distribuido bajo licencia **MIT** © 2026 Marc Escribano. Consulta el fichero [`LICENSE`](LICENSE).
+**© 2026 Marc Escribano Sierra. Todos los derechos reservados.**
 
-Puedes usar, copiar y modificar el código libremente, siempre que **se mantenga el aviso de copyright y autoría**. El software se ofrece "tal cual", sin garantías.
+Software propietario y confidencial. Consulta el fichero [`LICENSE`](LICENSE).
+
+Queda estrictamente prohibido usar, copiar, modificar, distribuir o sublicenciar este software sin autorización escrita previa del titular del copyright. Para consultas de licencia: marc.escribano.sierra@gmail.com
 
 ---
 
