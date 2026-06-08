@@ -111,7 +111,15 @@ def _construir_snapshot(session: Session, semana: date) -> dict[str, Any] | None
     reparto = reparto_service.leer_reparto(session, semana)
 
     todos_operarios = operario_service.leer_todos_operarios(session)
-    operarios_activos = [op for op in todos_operarios if op.horas_semanales > 0]
+    # Incluir operarios con asignaciones esta semana aunque sus horas se hayan
+    # bajado a 0 tras aprobar el reparto: si no, sus OPLs aparecen en Asignaciones
+    # y Reparto pero el operario falta en Cargas (incoherencia entre hojas). Igual
+    # criterio que el timeline (visibilidad por contexto).
+    dnis_con_asignacion = {a.dni_operario for a in todas if a.dni_operario is not None}
+    operarios_activos = [
+        op for op in todos_operarios
+        if op.horas_semanales > 0 or op.dni in dnis_con_asignacion
+    ]
     dnis_activos = [op.dni for op in operarios_activos]
     capacidades = {op.dni: int(round(op.horas_semanales * 60)) for op in operarios_activos}
     nombres_por_dni = {op.dni: op.nombre_completo for op in todos_operarios}
@@ -237,6 +245,13 @@ def _construir_snapshot(session: Session, semana: date) -> dict[str, Any] | None
         )
     )
     fallback_estado = "MODIFICADO MANUALMENTE" if reparto and not fue_optimizado else "DESCONOCIDO"
+
+    # Capacidad efectiva: un operario con horas=0 (capacidad bajada tras aprobar)
+    # pero con carga usa sus minutos asignados como referencia, igual que el
+    # timeline, para no dividir entre 0 ni desvirtuar la utilización.
+    for dni in capacidades:
+        if capacidades[dni] == 0:
+            capacidades[dni] = cargas.get(dni, 0)
 
     return {
         "estado_base": (reparto.estado_base if reparto and reparto.estado_base else fallback_estado),

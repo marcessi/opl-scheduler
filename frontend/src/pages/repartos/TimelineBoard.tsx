@@ -657,8 +657,11 @@ function FilaOperario({ operario, opls, contentWidthPx, pxPerMin, draggingOpl, o
   const sorted = sortOpls(opls)
   const capacidadMin = Math.round(operario.horas_semanales * 60)
   const totalMin     = opls.reduce((s, o) => s + (o.tiempo_planificado ?? 0), 0)
-  const pct          = capacidadMin > 0 ? Math.min(100, Math.round((totalMin / capacidadMin) * 100)) : 0
-  const capWidthPx   = capacidadMin * pxPerMin
+  // Capacidad sin dato (reparto aprobado con horas bajadas a 0): usa minutos
+  // asignados como referencia para barra guía y empaquetado.
+  const capRefMin    = capacidadMin > 0 ? capacidadMin : totalMin
+  const pct          = capRefMin > 0 ? Math.min(100, Math.round((totalMin / capRefMin) * 100)) : 0
+  const capWidthPx   = capRefMin * pxPerMin
   const empaquetado  = packPx(sorted, pxPerMin, capWidthPx)
 
   function cabe(dragging: DraggingOpl | null): boolean {
@@ -694,7 +697,9 @@ function FilaOperario({ operario, opls, contentWidthPx, pxPerMin, draggingOpl, o
           {operario.nombre_completo ?? operario.dni}
         </div>
         <div style={{ fontSize: 11, marginTop: 2, color: 'var(--text-muted, #6b7280)' }}>
-          {totalMin.toFixed(0)} / {capacidadMin} min ({pct}%)
+          {capacidadMin > 0
+            ? `${totalMin.toFixed(0)} / ${capacidadMin} min (${pct}%)`
+            : `${totalMin.toFixed(0)} min asignados`}
         </div>
       </div>
 
@@ -785,6 +790,7 @@ interface Props {
   onDrop: (idOpl: string, dni: string | null) => void
   onToggleFija: (opl: AsignacionDetalleOut) => void
   readonly: boolean
+  aprobado: boolean
   onExportExcel: () => void
   onReoptimize: () => void
   onLimpiarSelectivo: (opts: LimpiarOpts) => Promise<void>
@@ -804,6 +810,7 @@ interface Props {
  * @param onDrop Callback al soltar una OPL sobre un operario.
  * @param onToggleFija Callback para fijar/desfijar una asignación.
  * @param readonly Si el tablero es de solo lectura (reparto aprobado).
+ * @param aprobado Si el reparto está aprobado (histórico): cambia la visibilidad de operarios.
  * @param onExportExcel Exporta el reparto a Excel.
  * @param onReoptimize Relanza la optimización.
  * @param onLimpiarSelectivo Aplica una limpieza selectiva.
@@ -811,7 +818,7 @@ interface Props {
  * @param onAddOpls Añade OPLs seleccionadas al reparto.
  * @param articulosByRef Mapa referencia→nombre de artículo.
  */
-export default function TimelineBoard({ asignaciones, operarios, onDrop, onToggleFija, readonly, onExportExcel, onReoptimize, onLimpiarSelectivo, oplsSinReparto, onAddOpls, articulosByRef }: Props) {
+export default function TimelineBoard({ asignaciones, operarios, onDrop, onToggleFija, readonly, aprobado, onExportExcel, onReoptimize, onLimpiarSelectivo, oplsSinReparto, onAddOpls, articulosByRef }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [draggingOpl, setDraggingOpl] = useState<DraggingOpl | null>(null)
   const [sinAsignarOver, setSinAsignarOver] = useState(false)
@@ -948,13 +955,6 @@ export default function TimelineBoard({ asignaciones, operarios, onDrop, onToggl
 
   if (!asignaciones || !operarios) return null
 
-  const operariosActivos = operarios.filter(op => op.horas_semanales > 0)
-
-  const maxCapMin = Math.max(
-    ...operariosActivos.map(op => Math.round(op.horas_semanales * 60)),
-    1,
-  )
-
   const porOperario: Record<string, AsignacionDetalleOut[]> = {}
   const sinAsignar: AsignacionDetalleOut[] = []
   for (const a of asignaciones) {
@@ -966,6 +966,28 @@ export default function TimelineBoard({ asignaciones, operarios, onDrop, onToggl
     }
   }
 
+  // Operarios visibles según contexto: semana actual = horas>0; reparto aprobado
+  // (histórico) = solo los que tuvieron asignaciones en ese reparto, aunque sus
+  // horas se hayan bajado a 0 tras aprobar.
+  const operariosActivos = operarios.filter(op =>
+    aprobado ? (porOperario[op.dni]?.length ?? 0) > 0 : op.horas_semanales > 0
+  )
+
+  // Capacidad efectiva: en repartos aprobados un operario con horas_semanales=0
+  // (capacidad bajada tras aprobar) usa sus minutos asignados como referencia,
+  // así el eje y la barra guía no colapsan a 0.
+  const capEfectivaMin = (op: OperarioOut): number => {
+    const cap = Math.round(op.horas_semanales * 60)
+    if (cap > 0) return cap
+    const total = (porOperario[op.dni] ?? []).reduce((s, o) => s + (o.tiempo_planificado ?? 0), 0)
+    return Math.round(total)
+  }
+
+  const maxCapMin = Math.max(
+    ...operariosActivos.map(capEfectivaMin),
+    1,
+  )
+
   const availableWidth = Math.max(200, viewportWidth - LABEL_COL_PX)
   const fitPxPerMin = availableWidth / maxCapMin
   const pxPerMin = fitPxPerMin * zoom
@@ -976,7 +998,7 @@ export default function TimelineBoard({ asignaciones, operarios, onDrop, onToggl
     maxCapPx,
     ...operariosActivos.map(op => {
       const opls = porOperario[op.dni] ?? []
-      const capPxRow = Math.round(op.horas_semanales * 60) * pxPerMin
+      const capPxRow = capEfectivaMin(op) * pxPerMin
       return expectedRowWidth(opls, pxPerMin, capPxRow)
     }),
   )

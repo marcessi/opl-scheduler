@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session
 
 from src.database.schema import (
     Familia, Articulo, Operario, Operario_Familia, Operario_Articulo, OPL,
-    AsignacionOPL,
+    AsignacionOPL, Reparto,
 )
 
 # Orden de carga respetando dependencias + cabeceras por entidad
@@ -432,6 +432,23 @@ def exportar_entidades(
     wb.save(destino)
 
 
+def _dnis_horas_bloqueadas(session: Session) -> set[str]:
+    """DNIs cuyas horas_semanales no deben modificarse vía carga.
+
+    Son operarios con asignaciones en algún reparto NO aprobado (semana en
+    planificación). Cambiar su capacidad rompería el reparto en curso. Típicamente
+    solo hay un reparto no aprobado a la vez (la semana actual), pero la consulta
+    es correcta aunque hubiera varios.
+    """
+    stmt = (
+        select(AsignacionOPL.dni_operario)
+        .join(Reparto, AsignacionOPL.semana == Reparto.semana)
+        .where(Reparto.aprobado.is_(False), AsignacionOPL.dni_operario.isnot(None))
+        .distinct()
+    )
+    return set(session.scalars(stmt).all())
+
+
 def cargar_entidades(
     session: Session,
     path: str,
@@ -463,6 +480,18 @@ def cargar_entidades(
 
     # PKs en BD antes de tocar nada (para comparar contra las del Excel).
     pks_antes = {e: _pks_actuales(session, e) for e in entidades_a_procesar}
+
+    # Para 'operarios': proteger horas_semanales de quien tiene asignaciones en un
+    # reparto no aprobado (no se pueden recapacitar en mitad de la planificación).
+    dnis_horas_protegidas: set[str] = set()
+    horas_bd: dict[str, float] = {}
+    if "operarios" in entidades_a_procesar:
+        dnis_horas_protegidas = _dnis_horas_bloqueadas(session)
+        if dnis_horas_protegidas:
+            horas_bd = dict(session.execute(
+                select(Operario.dni, Operario.horas_semanales)
+                .where(Operario.dni.in_(dnis_horas_protegidas))
+            ).all())
 
     # En modo reemplazar, borrar primero solo las filas no referenciadas; las que
     # estén en uso por datos operacionales se conservan y se actualizarán (upsert).
@@ -508,6 +537,22 @@ def cargar_entidades(
                 _registrar_error(errores, entidad, ws.title, row_idx, "Clave duplicada en el archivo")
                 continue
             pks_vistos.add(pk_key)
+
+            # Proteger horas de operarios con asignaciones en planificación: si el
+            # operario está bloqueado y el Excel trae otras horas, conservar las de BD
+            # (el resto de campos, p. ej. nombre, sí se actualiza) y avisar.
+            if entidad == "operarios" and fila["dni"] in dnis_horas_protegidas:
+                actual = horas_bd.get(fila["dni"])
+                # actual es None si el operario aún no existe en BD (alta nueva): no
+                # hay horas previas que proteger, se permite el valor del Excel.
+                if actual is not None and abs(float(fila["horas_semanales"]) - float(actual)) > 1e-9:
+                    fila["horas_semanales"] = actual
+                    motivo = "Horas no actualizadas: operario con asignaciones en planificación"
+                    razones[motivo] += 1
+                    _registrar_error(
+                        errores, entidad, ws.title, row_idx, motivo,
+                        campo="horas_semanales", valor=datos.get("horas_semanales"),
+                    )
 
             filas_ok.append(fila)
 

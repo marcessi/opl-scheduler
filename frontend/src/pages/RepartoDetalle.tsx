@@ -90,8 +90,10 @@ export default function RepartoDetalle() {
       .then(data => setOpls(data))
       .catch(err => setLoadError(err instanceof Error ? err.message : 'Error'))
 
+    // Lista completa: TimelineBoard filtra por contexto (semana actual = horas>0;
+    // reparto aprobado = solo quien tuvo asignaciones, aunque sus horas sean 0).
     apiFetch<OperarioOut[]>('/operarios')
-      .then(data => setOperarios(data.filter(op => op.horas_semanales > 0)))
+      .then(data => setOperarios(data))
       .catch(() => {})
 
     apiFetch<ArticuloOut[]>('/articulos')
@@ -465,6 +467,7 @@ export default function RepartoDetalle() {
             onDrop={handleTimelineDrop}
             onToggleFija={handleToggleFija}
             readonly={isAprobado || solverBloqueoOtraSemana}
+            aprobado={isAprobado}
             onExportExcel={handleExportExcel}
             onReoptimize={() => {
               const reoptimizables = asignaciones
